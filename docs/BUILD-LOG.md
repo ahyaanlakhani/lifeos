@@ -48,3 +48,21 @@ from a running log reads specific rather than generic, which is visible.
   was that it made the error *visible* rather than subtly wrong.
 - Cost meter reports null, not 0.00, when a model's rate is unknown. A meter
   reading zero looks like a working meter reporting a free call.
+- Sessions 4, 5 and 6 (nemoclaw wrapper, event stream, API) built against a
+  driver interface rather than the real CLI, because the CLI surface is a
+  week-one unknown and guessing at alpha flags is how a week gets lost. Every
+  command string sits in one `COMMANDS` dict marked unverified, and a test
+  asserts it is still marked unverified so flipping that flag is deliberate.
+- The two other week-one unknowns are abstracted the same way. `InteractiveEgress`
+  and `PolicyFileEgress` implement one interface, so the six REST endpoints are
+  identical whichever answer week one gives. Log tailing falls back from follow
+  to a 500 ms poll inside the same async iterator, so no caller branches on it.
+- `FakeDriver` is not a test double bolted on afterwards — it is how demo mode
+  works. It replays a scripted session covering every beat of the video: the
+  calendar conflict, the Tavily search, the injection email being declined, the
+  blocked egress, and a draft left awaiting approval. Glass Box can now be built
+  and recorded before the VM exists.
+- PolicyFileEgress refuses `scope=once` rather than faking it: a static
+  allowlist cannot express a one-shot exception, and silently making it
+  permanent would be a hole punched in the policy by the UI.
+- Deps added, all spec-sanctioned: fastapi, uvicorn, httpx, pyyaml.

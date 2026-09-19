@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import threading
 import time
 import uuid
@@ -254,3 +255,66 @@ def read_session(path: str | os.PathLike[str]) -> Iterator[Event]:
 def new_session_id(now: float | None = None) -> str:
     stamp = time.strftime("%Y%m%d-%H%M%S", time.gmtime(now or time.time()))
     return f"{stamp}-{uuid.uuid4().hex[:6]}"
+
+
+# -- log lines -> typed events --------------------------------------------
+
+_LEVELS = {"DEBUG", "INFO", "WARN", "WARNING", "ERROR", "BLOCK", "TRACE"}
+_KV = re.compile(r'(\w+)=("[^"]*"|\S+)')
+
+
+def parse_log_line(line: str, session: str) -> Event | None:
+    """Turn one sandbox log line into an Event, or None if it carries nothing.
+
+    The summary starts as the raw line with `summary_pending` set. Nano rewrites
+    it a beat later via `EventLog.patch_summary`; emitting immediately is what
+    keeps the timeline live rather than stalling behind a batched inference
+    call.
+
+    Unparseable lines still become events. A log line the host does not
+    understand is exactly the thing an operator needs to see, and swallowing it
+    would violate "no silent work".
+    """
+    line = line.rstrip()
+    if not line.strip():
+        return None
+
+    head, _, rest = line.partition(" ")
+    level = head.strip().upper()
+    if level not in _LEVELS:
+        level, rest = "INFO", line
+
+    fields = {
+        key: value[1:-1] if value.startswith('"') and value.endswith('"') else value
+        for key, value in _KV.findall(rest)
+    }
+
+    agent = fields.get("agent", "system")
+    if agent not in AGENTS:
+        agent = "system"
+
+    return Event(
+        kind=_kind_for(level, rest, fields),
+        agent=agent,
+        summary=line,
+        session=session,
+        detail={"level": level, "raw": line, **fields},
+        summary_pending=True,
+    )
+
+
+def _kind_for(level: str, rest: str, fields: dict[str, str]) -> str:
+    """Classify from the level, the bare marker tokens, and the key=value
+    fields. Markers like `egress` and `memory_write` appear as bare tokens in
+    the log format, not as keys, so the raw text is checked too."""
+    if level == "BLOCK" or "egress" in rest:
+        return "egress_request"
+    if level == "ERROR":
+        return "error"
+    if "memory_write" in rest:
+        return "memory_write"
+    if "search" in fields.get("tool", ""):
+        return "search"
+    if fields.get("voice") or "transcript" in rest:
+        return "voice"
+    return "action"
