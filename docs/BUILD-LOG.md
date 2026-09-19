@@ -115,3 +115,7 @@ from a running log reads specific rather than generic, which is visible.
   prompt, so the sandbox rules cannot be lost when a per-agent prompt is
   reworked for Nemotron. The per-agent prompts remain adaptations of the LifeOS
   master prompt, layered on top.
+- Verified from a clean start with every credential env var unset: all seven
+  host endpoints, all four Glass Box pages, the WebSocket, the grounding pass
+  and the approval flow. No errors in the host log. `inference_ready` reports
+  false, which is correct and visible.
