@@ -1,0 +1,16 @@
+# Agent host + jobs. Python 3.11+.
+#
+#   python -m pip install -r requirements.txt
+#   # or, faster:  uv pip install -r requirements.txt
+#
+# Demo mode needs all of these and no credentials.
+
+fastapi>=0.115
+uvicorn>=0.32
+websockets>=13          # uvicorn's WS support; without it /api/stream 404s
+httpx>=0.27             # Tavily, and the test client
+pyyaml>=6               # routing.yaml (client.py falls back if absent)
+openai>=1.50            # Token Factory, OpenAI-compatible endpoint
+
+# dev
+pytest>=8
