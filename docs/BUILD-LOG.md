@@ -105,3 +105,13 @@ from a running log reads specific rather than generic, which is visible.
   week-five ritual: every endpoint answers with no credentials, plus standing
   guards that no tracked file contains anything shaped like an API key and that
   .env.example holds only names.
+- Agent run loop written (`packages/agents/loop.py`) — the replacement for the
+  Claude Agent SDK's loop. Plain, as the spec predicted it could be. Three
+  things it refuses to do: run a tool marked `requires_approval` (no override
+  flag, because a flag is exactly what gets set during a demo), treat tool
+  output as instructions, or run unbounded. Turn count and total tool calls are
+  both capped and hitting either ends the run with a stated reason.
+- The shared guardrail preamble sits in the loop rather than in each agent's
+  prompt, so the sandbox rules cannot be lost when a per-agent prompt is
+  reworked for Nemotron. The per-agent prompts remain adaptations of the LifeOS
+  master prompt, layered on top.
