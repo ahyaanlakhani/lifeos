@@ -304,3 +304,36 @@ def test_an_out_of_scope_agent_cannot_be_started(api: TestClient) -> None:
     response = api.post("/api/sandboxes/crm/start")
     assert response.status_code == 400
     assert "crm" in response.json()["detail"]
+
+
+# -- 5b. GET /api/memory --------------------------------------------------
+
+
+def test_memory_serves_the_seed_rows_in_demo_mode(
+    api: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("DEMO", "true")
+    body = api.get("/api/memory").json()
+    assert body["source"] == "fixtures"
+    assert len(body["rows"]) >= 10
+
+
+def test_every_memory_row_carries_a_grounding_status(
+    api: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The Memory screen renders a badge per row, so a row without a status
+    would render as a hole rather than as `unverified`."""
+    monkeypatch.setenv("DEMO", "true")
+    for row in api.get("/api/memory").json()["rows"]:
+        assert row["grounding"]["status"]
+
+
+def test_memory_outside_demo_mode_returns_empty_rather_than_fixtures(
+    api: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A misconfigured deployment must show an empty memory, never a fake one
+    that looks like real recall."""
+    monkeypatch.setenv("DEMO", "false")
+    body = api.get("/api/memory").json()
+    assert body["source"] == "supabase"
+    assert body["rows"] == []

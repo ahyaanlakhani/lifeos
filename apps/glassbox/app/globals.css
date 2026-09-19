@@ -1,0 +1,715 @@
+/* Glass Box design tokens.
+
+   A control plane, not a dashboard. The job is to make an autonomous agent's
+   activity legible at a glance and stoppable in one tap — so density and
+   scan-speed matter more than decoration, and the approval surface is built
+   phone-first because that is where it will actually be used.
+
+   Dark by default: this is recorded on video and read in a dim room. A light
+   scheme is honoured when the viewer's system asks for one, so a judge on a
+   bright screen is not punished for it. */
+
+:root {
+  --bg: #0a0b0d;
+  --surface: #121417;
+  --surface-2: #171a1f;
+  --border: #23282f;
+  --border-strong: #333a44;
+
+  --text: #e8ebf0;
+  --text-dim: #9aa3b2;
+  --text-faint: #646d7c;
+
+  --accent: #5b8cff;
+  --accent-dim: #2a3d6b;
+
+  /* One hue per event kind. Chosen to stay distinguishable in the
+     desaturated compression a YouTube upload applies. */
+  --k-action: #7f8a9c;
+  --k-inference: #a78bfa;
+  --k-egress-request: #f5a524;
+  --k-egress-allow: #34d399;
+  --k-egress-deny: #f87171;
+  --k-memory: #2dd4bf;
+  --k-search: #38bdf8;
+  --k-voice: #f472b6;
+  --k-error: #f87171;
+
+  --ok: #34d399;
+  --warn: #f5a524;
+  --danger: #f87171;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --gutter: 16px;
+
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #fbfbfc;
+    --surface: #ffffff;
+    --surface-2: #f4f5f7;
+    --border: #e3e6ea;
+    --border-strong: #cdd2d9;
+    --text: #14171c;
+    --text-dim: #5a6472;
+    --text-faint: #8b94a2;
+    --accent: #2f5fe0;
+    --accent-dim: #c7d5fb;
+    --k-action: #6b7485;
+    --k-inference: #7c3aed;
+    --k-memory: #0d9488;
+    --k-search: #0284c7;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---- shell ---- */
+
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px var(--gutter);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.brand small {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.nav {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
+.nav a {
+  padding: 7px 11px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  position: relative;
+}
+
+.nav a:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.nav a[aria-current="page"] {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.nav .badge {
+  display: inline-block;
+  min-width: 17px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--warn);
+  color: #1a1204;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 18px var(--gutter) 64px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  max-width: 60ch;
+}
+
+/* ---- connection pill ---- */
+
+.conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: var(--surface);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex: none;
+}
+
+.dot.live {
+  background: var(--ok);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 70%, transparent);
+  animation: pulse 2.4s ease-out infinite;
+}
+
+.dot.down {
+  background: var(--danger);
+}
+
+@keyframes pulse {
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot.live {
+    animation: none;
+  }
+}
+
+/* ---- timeline ---- */
+
+.timeline {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 58px 10px 1fr auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row:hover {
+  background: var(--surface-2);
+}
+
+.row .time {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.row .pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--kind, var(--k-action));
+  transform: translateY(1px);
+}
+
+.row .body {
+  min-width: 0;
+}
+
+.row .text {
+  overflow-wrap: anywhere;
+}
+
+.row.pending .text {
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.row .meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.tag {
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.tag.kind {
+  border-color: color-mix(in srgb, var(--kind, var(--k-action)) 45%, transparent);
+  color: var(--kind, var(--k-action));
+}
+
+/* ---- cards ---- */
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px;
+}
+
+.card + .card {
+  margin-top: 10px;
+}
+
+.card.urgent {
+  border-color: color-mix(in srgb, var(--warn) 55%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--warn) 14%, transparent);
+}
+
+.card h2 {
+  margin: 0 0 2px;
+  font-size: 15px;
+  font-weight: 620;
+}
+
+.card .host {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: var(--warn);
+  overflow-wrap: anywhere;
+}
+
+.card .why {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* Approvals are used on a phone, so the targets are phone-sized everywhere. */
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* Secondary controls — filters, disclosure toggles. These stay a horizontal
+   row at every width; only the decision buttons in `.actions` stack. */
+.filters,
+.toolbar {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.filters::-webkit-scrollbar,
+.toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.toolbar {
+  margin: 10px 0 0;
+}
+
+.filters button,
+.toolbar button {
+  flex: none;
+  min-height: 32px;
+  padding: 0 11px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-dim);
+}
+
+.filters button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+}
+
+button {
+  flex: 1;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 560;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--text-faint);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.deny {
+  border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+  color: var(--danger);
+}
+
+button.deny:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface-2));
+}
+
+button.allow {
+  border-color: color-mix(in srgb, var(--ok) 45%, transparent);
+  color: var(--ok);
+}
+
+button.allow:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ok) 12%, var(--surface-2));
+}
+
+button.ghost {
+  flex: none;
+  min-height: 34px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* ---- empty + error states ---- */
+
+.empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.empty strong {
+  display: block;
+  color: var(--text);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.banner {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* ---- routing ---- */
+
+.tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.tier {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 13px;
+}
+
+.tier .task {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.tier .model {
+  margin: 4px 0 10px;
+  font-family: var(--mono);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.tier .model.placeholder {
+  color: var(--warn);
+}
+
+.stat-row {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.stat .label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.stat .value {
+  font-family: var(--mono);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat .value.unknown {
+  color: var(--text-faint);
+  font-size: 14px;
+}
+
+select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* ---- memory ---- */
+
+.mem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.mem .grow {
+  min-width: 0;
+  flex: 1;
+}
+
+pre.diff {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+pre.diff .add {
+  color: var(--ok);
+}
+
+pre.diff .del {
+  color: var(--danger);
+}
+
+pre.diff .hunk {
+  color: var(--text-faint);
+}
+
+.prov {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid var(--border-strong);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.prov.confirmed {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 45%, transparent);
+}
+
+.prov.stale {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+}
+
+.prov.contradicted {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+.prov.unverified {
+  color: var(--text-faint);
+}
+
+/* ---- small screens: the approvals path is the one that must feel native ----
+
+   The nav becomes a bottom bar rather than a horizontally scrolling strip.
+   Four items will not fit beside the wordmark at 375px, and a half-visible
+   "Mem…" reads as unfinished on camera — which matters, because the phone is
+   where the strongest thirty seconds of the demo happens. */
+
+@media (max-width: 640px) {
+  main {
+    padding: 14px var(--gutter) calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .brand small {
+    display: none;
+  }
+
+  /* backdrop-filter makes an element the containing block for its
+     position:fixed descendants, so the bottom nav would otherwise be pinned
+     inside the header rather than the viewport. The header holds only the
+     wordmark at this width, so dropping the blur costs nothing. */
+  .topbar {
+    backdrop-filter: none;
+    background: var(--bg);
+  }
+
+  .nav {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    margin-left: 0;
+    gap: 0;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    overflow-x: visible;
+  }
+
+  .nav a {
+    flex: 1;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  .row {
+    grid-template-columns: 46px 8px 1fr;
+    row-gap: 4px;
+    padding: 10px 12px;
+  }
+
+  .row .meta {
+    grid-column: 3;
+  }
+
+  /* Stacked, with Deny nearest the thumb. The safe decision should be the
+     easy one to reach; "allow always" is the one that deserves a deliberate
+     stretch. */
+  .actions {
+    flex-direction: column;
+  }
+
+  button {
+    min-height: 50px;
+    font-size: 15px;
+  }
+}

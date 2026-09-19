@@ -66,3 +66,29 @@ from a running log reads specific rather than generic, which is visible.
   allowlist cannot express a one-shot exception, and silently making it
   permanent would be a hole punched in the policy by the UI.
 - Deps added, all spec-sanctioned: fastapi, uvicorn, httpx, pyyaml.
+- Glass Box built: Timeline, Approvals, Memory and Routing, plus the live
+  WebSocket stream with backfill and reconnect. Next.js 15, no CSS framework —
+  hand-written tokens, because the design criterion is a quarter of the score
+  and a default component library reads as a default component library.
+- Three bugs that only a real browser found, none of which the test suite could
+  have caught:
+  1. `uvicorn` had no WebSocket library installed. FastAPI's TestClient
+     implements WebSockets in-process, so every WS test passed while a real
+     browser got a 404 on the upgrade. Installed `websockets`.
+  2. `backdrop-filter` on the sticky header made it the containing block for
+     its `position: fixed` children, so the mobile bottom nav was pinned inside
+     the header instead of the viewport. Invisible on desktop; broken on the
+     one screen the demo depends on.
+  3. The timeline's filter row reused the `.actions` class, which stacks
+     vertically on mobile — seven full-height buttons in a column.
+- Also flipped the approval buttons: `Deny` now sits nearest the thumb on
+  mobile. The safe decision should be the easy one; "allow always" deserves a
+  deliberate stretch.
+- Tavily is in, in both places the spec wants it: the Research agent's search
+  tool, and the nightly grounding pass that re-checks remembered claims and
+  marks them confirmed / stale / contradicted. That second use is what makes
+  the call load-bearing rather than a bolt-on, and all three verdicts are
+  visible in demo mode.
+- The grounding judge routes to `plan` (Ultra) and parses a chatty verdict
+  down to one word, falling back to `unverified`. An unparsed verdict must
+  never read as `confirmed`.

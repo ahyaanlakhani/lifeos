@@ -491,6 +491,9 @@ class FakeDriver:
                 yield line
             if not self.loop_script:
                 return
+            # A pause between cycles, so a looping demo reads as a system
+            # going quiet and picking up again rather than as spam.
+            await asyncio.sleep(8 / self.speed if self.speed else 0)
 
     async def pending_egress(self) -> list[EgressRequest]:
         return sorted(self._pending.values(), key=lambda r: r.requested_at)
@@ -530,7 +533,14 @@ def build_driver(demo: bool | None = None, **kwargs: Any) -> SandboxDriver:
     if demo is None:
         demo = os.environ.get("DEMO", "true").strip().lower() not in {"0", "false", "no", "off", ""}
     if demo:
-        return FakeDriver(**{k: v for k, v in kwargs.items() if k in {"speed", "loop_script"}})
+        fake_kwargs = {k: v for k, v in kwargs.items() if k in {"speed", "loop_script"}}
+        # DEMO_LOOP keeps the scripted session running, so a timeline being
+        # recorded does not go quiet halfway through a take.
+        fake_kwargs.setdefault(
+            "loop_script",
+            os.environ.get("DEMO_LOOP", "").strip().lower() in {"1", "true", "yes", "on"},
+        )
+        return FakeDriver(**fake_kwargs)
     driver = NemoClawDriver(**{k: v for k, v in kwargs.items() if k not in {"speed", "loop_script"}})
     if not driver.available():
         raise RuntimeError(
