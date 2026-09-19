@@ -1,0 +1,101 @@
+{
+  "_comment": "Synthetic calendar for DEMO=true. Dates are anchored to Thursday 2026-10-01 and rebased to today by fixtures/loader.py, so the demo always looks live. No real people, no real addresses.",
+  "anchor_date": "2026-10-01",
+  "timezone": "Europe/London",
+  "calendars": [
+    { "id": "primary", "name": "Personal", "colour": "#4f7cff" },
+    { "id": "work", "name": "Work", "colour": "#12b886" }
+  ],
+  "events": [
+    {
+      "id": "evt_0001",
+      "calendar": "work",
+      "title": "Standup",
+      "start": "2026-10-01T09:30:00+01:00",
+      "end": "2026-10-01T09:45:00+01:00",
+      "recurring": "weekdays",
+      "attendees": ["priya.raman@northwind.example", "tomas.okafor@northwind.example"],
+      "location": "Meet link"
+    },
+    {
+      "id": "evt_0002",
+      "calendar": "work",
+      "title": "Design review — onboarding flow",
+      "start": "2026-10-01T11:00:00+01:00",
+      "end": "2026-10-01T12:00:00+01:00",
+      "attendees": ["priya.raman@northwind.example", "lena.fischer@northwind.example"],
+      "location": "Room 2B",
+      "notes": "Bring the two divergent directions, not one."
+    },
+    {
+      "id": "evt_0003",
+      "calendar": "primary",
+      "title": "Dentist",
+      "start": "2026-10-01T14:30:00+01:00",
+      "end": "2026-10-01T15:15:00+01:00",
+      "location": "Meadow Lane Dental",
+      "notes": "Rescheduled twice already."
+    },
+    {
+      "id": "evt_0004",
+      "calendar": "work",
+      "title": "1:1 with Priya",
+      "start": "2026-10-01T16:00:00+01:00",
+      "end": "2026-10-01T16:30:00+01:00",
+      "attendees": ["priya.raman@northwind.example"]
+    },
+    {
+      "id": "evt_0005",
+      "calendar": "primary",
+      "title": "Gym",
+      "start": "2026-10-01T18:30:00+01:00",
+      "end": "2026-10-01T19:30:00+01:00",
+      "recurring": "tue,thu"
+    },
+    {
+      "id": "evt_0006",
+      "calendar": "work",
+      "title": "Quarterly planning — all day",
+      "start": "2026-10-02T09:00:00+01:00",
+      "end": "2026-10-02T17:00:00+01:00",
+      "attendees": [
+        "priya.raman@northwind.example",
+        "tomas.okafor@northwind.example",
+        "lena.fischer@northwind.example",
+        "sam.abiodun@northwind.example"
+      ],
+      "notes": "The conflict the Calendar agent has to notice."
+    },
+    {
+      "id": "evt_0007",
+      "calendar": "primary",
+      "title": "Flight to Lisbon",
+      "start": "2026-10-02T13:40:00+01:00",
+      "end": "2026-10-02T16:20:00+01:00",
+      "location": "LGW",
+      "notes": "Directly collides with quarterly planning. This is the demo conflict."
+    },
+    {
+      "id": "evt_0008",
+      "calendar": "primary",
+      "title": "Call with Mum",
+      "start": "2026-10-03T11:00:00+01:00",
+      "end": "2026-10-03T11:30:00+01:00",
+      "recurring": "weekly"
+    },
+    {
+      "id": "evt_0009",
+      "calendar": "work",
+      "title": "Northwind renewal call",
+      "start": "2026-10-05T15:00:00+01:00",
+      "end": "2026-10-05T15:45:00+01:00",
+      "attendees": ["dana.whitfield@meridianlabs.example"],
+      "notes": "Prep needed — the Research agent picks this up."
+    }
+  ],
+  "free_busy_hint": {
+    "working_hours": { "start": "09:00", "end": "18:00" },
+    "no_meetings_before": "09:30",
+    "protected": ["Gym", "Call with Mum"]
+  }
+}

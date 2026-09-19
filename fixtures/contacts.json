@@ -1,0 +1,49 @@
+{
+  "_comment": "Synthetic contact graph for DEMO=true. All addresses use RFC 2606 .example domains. No real people.",
+  "contacts": [
+    {
+      "id": "con_0001",
+      "name": "Priya Raman",
+      "email": "priya.raman@northwind.example",
+      "relationship": "manager",
+      "org": "Northwind",
+      "cadence_days": 7,
+      "notes": "Direct. Prefers a decision with the reasoning underneath, not options."
+    },
+    {
+      "id": "con_0002",
+      "name": "Tomas Okafor",
+      "email": "tomas.okafor@northwind.example",
+      "relationship": "colleague",
+      "org": "Northwind",
+      "cadence_days": 21,
+      "notes": "Coffee outstanding since late September."
+    },
+    {
+      "id": "con_0003",
+      "name": "Lena Fischer",
+      "email": "lena.fischer@northwind.example",
+      "relationship": "colleague",
+      "org": "Northwind",
+      "cadence_days": 14,
+      "notes": "Design lead on the onboarding flow."
+    },
+    {
+      "id": "con_0004",
+      "name": "Sam Abiodun",
+      "email": "sam.abiodun@northwind.example",
+      "relationship": "colleague",
+      "org": "Northwind",
+      "cadence_days": 30
+    },
+    {
+      "id": "con_0005",
+      "name": "Dana Whitfield",
+      "email": "dana.whitfield@meridianlabs.example",
+      "relationship": "client",
+      "org": "Meridian Labs",
+      "cadence_days": 10,
+      "notes": "Renewal in progress. Comparing three vendors. Wants written material before the call."
+    }
+  ]
+}

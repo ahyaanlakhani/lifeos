@@ -1,0 +1,76 @@
+{
+  "_comment": "Recorded Tavily responses so DEMO=true needs no TAVILY_API_KEY. Keyed by a normalised query string; fixtures/loader.py falls back to `_default` on a miss. Replace these with genuinely recorded responses once the key exists — the shape here follows Tavily's documented `results` array, but the live shape is the one that counts.",
+  "_shape_warning": "VERIFY against Tavily's current docs before relying on field names. The auth header convention in particular has changed across versions.",
+  "responses": {
+    "meridian labs series b march 2026": {
+      "query": "Meridian Labs Series B March 2026",
+      "results": [
+        {
+          "title": "Meridian Labs closes Series B",
+          "url": "https://news.example/meridian-labs-series-b",
+          "content": "Meridian Labs announced a Series B in March 2026, led by an unnamed growth fund.",
+          "score": 0.94,
+          "published_date": "2026-03-18"
+        }
+      ],
+      "_expected_grounding": "confirmed"
+    },
+    "dana whitfield head of platform meridian labs": {
+      "query": "Dana Whitfield Head of Platform Meridian Labs",
+      "results": [
+        {
+          "title": "Meridian Labs — leadership",
+          "url": "https://meridianlabs.example/about/leadership",
+          "content": "Dana Whitfield, VP Engineering. Previously Head of Platform.",
+          "score": 0.88,
+          "published_date": "2026-09-01"
+        }
+      ],
+      "_expected_grounding": "stale"
+    },
+    "northwind renewal cycle calendar year": {
+      "query": "Northwind renewal cycle calendar year",
+      "results": [
+        {
+          "title": "Northwind customer terms",
+          "url": "https://northwind.example/terms",
+          "content": "Subscription terms renew on the anniversary of the contract start date, not on a fixed calendar date.",
+          "score": 0.91,
+          "published_date": "2026-08-12"
+        }
+      ],
+      "_expected_grounding": "contradicted"
+    },
+    "meridian labs vendor comparison deployment timelines": {
+      "query": "Meridian Labs vendor comparison deployment timelines",
+      "results": [
+        {
+          "title": "How Meridian Labs evaluates vendors",
+          "url": "https://meridianlabs.example/blog/vendor-evaluation",
+          "content": "Procurement weights deployment time and named support contacts above headline price.",
+          "score": 0.86,
+          "published_date": "2026-06-30"
+        },
+        {
+          "title": "Platform procurement in 2026",
+          "url": "https://news.example/platform-procurement-2026",
+          "content": "Boards increasingly ask for written cases before renewal calls.",
+          "score": 0.72,
+          "published_date": "2026-09-09"
+        }
+      ]
+    },
+    "_default": {
+      "query": "",
+      "results": [
+        {
+          "title": "No recorded fixture for this query",
+          "url": "https://example.invalid/no-fixture",
+          "content": "DEMO=true returns this when a query has no recorded response. Add one to fixtures/tavily.json rather than reaching the network.",
+          "score": 0.0,
+          "published_date": null
+        }
+      ]
+    }
+  }
+}
