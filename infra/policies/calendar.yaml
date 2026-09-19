@@ -1,0 +1,11 @@
+# Calendar agent — egress allowlist
+# SCHEMA PROVISIONAL: reconcile with `nemoclaw --help` in week one.
+agent: calendar
+egress:
+  allow:
+    - www.googleapis.com        # Calendar API
+    - oauth2.googleapis.com     # token refresh
+    - api.studio.nebius.com     # Token Factory — CONFIRM host from console
+    - "*.supabase.co"           # memory store
+  deny_by_default: true
+# Deliberately absent: api.tavily.com. The Calendar agent does not search.

@@ -1,0 +1,10 @@
+# Research agent — egress allowlist
+# SCHEMA PROVISIONAL: reconcile with `nemoclaw --help` in week one.
+agent: research
+egress:
+  allow:
+    - api.tavily.com            # the only agent that gets search
+    - api.studio.nebius.com     # Token Factory — CONFIRM host from console
+    - "*.supabase.co"
+  deny_by_default: true
+# Deliberately absent: all Google APIs. Research reads the web, not your inbox.

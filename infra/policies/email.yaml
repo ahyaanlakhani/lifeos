@@ -1,0 +1,11 @@
+# Email agent — egress allowlist
+# SCHEMA PROVISIONAL: reconcile with `nemoclaw --help` in week one.
+agent: email
+egress:
+  allow:
+    - gmail.googleapis.com      # gmail.send scope only — no restricted scopes
+    - oauth2.googleapis.com
+    - api.studio.nebius.com     # Token Factory — CONFIRM host from console
+    - "*.supabase.co"
+  deny_by_default: true
+# Deliberately absent: api.tavily.com, www.googleapis.com (no calendar access).

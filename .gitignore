@@ -1,0 +1,38 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# node
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# runtime data — event logs, session replays, recorded fixtures with real data
+data/sessions/*.jsonl
+data/**/*.jsonl
+
+# media
+*.mp4
+*.mov
+*.wav
+*.mp3
+recordings/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
