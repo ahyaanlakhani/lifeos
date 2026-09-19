@@ -3,11 +3,23 @@
 #
 # Model ids below are PLACEHOLDERS. Replace with the exact ids from the
 # Token Factory console (Step 1 of the runbook) before any real call.
+# The client raises PlaceholderModelError on any id still containing "TODO",
+# which fails loudly rather than as a confusing 404 from the API.
+#
 # Never hardcode a model id in agent code — always route through complete().
 
 plan:      "TODO/nemotron-3-ultra"     # daily planning pass, nightly synthesis
 execute:   "TODO/nemotron-3-super"     # agent execution — the default tier
 summarize: "TODO/nemotron-3-nano"      # activity feed, classification
 
-# Cheap-dev override: set all three to the nano id while building, so debug
+# Cheap-dev override: point all three at the nano id while building, so debug
 # loops do not burn Super/Ultra credits.
+
+# Cost meter. Fill in from the Token Factory pricing page, keyed by the exact
+# model id used above. Left empty on purpose: the client reports cost as null
+# rather than 0.00 when a rate is unknown, because a meter reading zero looks
+# like a working meter reporting a free call.
+pricing: {}
+#   "nvidia/nemotron-3-nano":
+#     input_per_mtok: 0.00
+#     output_per_mtok: 0.00

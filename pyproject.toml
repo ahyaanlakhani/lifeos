@@ -5,8 +5,12 @@ description = "LifeOS agent host — nemoclaw wrapper, event stream, approvals A
 requires-python = ">=3.11"
 dependencies = []
 
+# Runtime deps are added as each piece lands. PyYAML is used for routing.yaml
+# and is optional at runtime — packages/inference/client.py falls back to a
+# small parser so a missing dependency on the VM cannot stop model routing.
+
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "pyyaml>=6"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

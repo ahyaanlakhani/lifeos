@@ -29,3 +29,22 @@ from a running log reads specific rather than generic, which is visible.
 - Toolchain gap: `uv` and `pnpm` are not installed on the laptop yet; `gh` is
   not either. pytest was installed with plain pip as a stopgap. Fix before
   session 2.
+- Sessions 2 and 3 (Token Factory client, tool-schema translation) built
+  offline, ahead of having a key. Every transport is injectable, so the whole
+  adapter is testable without touching Nebius — which is the point, given the
+  spec's warning about burning credits on week-two debug loops.
+- `routing.yaml` model ids are still placeholders. The client raises
+  `PlaceholderModelError` on any id containing "TODO" rather than letting it
+  become a confusing 404 from the API.
+- Wrote a fallback YAML parser so a missing PyYAML on the VM cannot stop model
+  routing. First version had two bugs the tests caught: it only handled one
+  level of nesting, and it skipped comment-stripping on any line containing a
+  quote — which is every line in the shipped routing file. Rewrote it
+  indent-aware with a quote-respecting comment stripper.
+- Fixture authoring bug also caught by a test: 2026-10-02 is a Friday, not a
+  Thursday, so "quarterly planning on Friday" was landing on a Saturday. Moved
+  the anchor to Thursday 2026-10-01 and the whole demo week now reads right.
+  Worth noting for the feedback section: the value of the week-shift rebasing
+  was that it made the error *visible* rather than subtly wrong.
+- Cost meter reports null, not 0.00, when a model's rate is unknown. A meter
+  reading zero looks like a working meter reporting a free call.
