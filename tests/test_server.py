@@ -337,3 +337,55 @@ def test_memory_outside_demo_mode_returns_empty_rather_than_fixtures(
     body = api.get("/api/memory").json()
     assert body["source"] == "supabase"
     assert body["rows"] == []
+
+
+# -- inference readiness --------------------------------------------------
+
+
+def test_the_host_declines_to_build_a_client_while_ids_are_placeholders(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Otherwise every summarization batch would emit an error, and the
+    timeline would fill with noise about a key that was never set."""
+    monkeypatch.setenv("NEBIUS_BASE_URL", "https://example.invalid/v1")
+    monkeypatch.setenv("NEBIUS_API_KEY", "not-a-real-key")
+    placeholder = tmp_path / "routing.yaml"
+    placeholder.write_text(
+        'plan: "TODO/ultra"\nexecute: "TODO/super"\nsummarize: "TODO/nano"\n', encoding="utf-8"
+    )
+
+    host = Host(
+        driver=FakeDriver(speed=1000),
+        data_dir=tmp_path / "s",
+        routing_path=placeholder,
+        session="x",
+    )
+    assert host.inference_ready is False
+    assert host.summarizer is None
+
+
+def test_the_host_declines_to_build_a_client_with_no_credentials(
+    tmp_path: Path, routing_file: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("NEBIUS_BASE_URL", raising=False)
+    monkeypatch.delenv("NEBIUS_API_KEY", raising=False)
+    host = Host(
+        driver=FakeDriver(speed=1000), data_dir=tmp_path / "s", routing_path=routing_file, session="x"
+    )
+    assert host.inference_ready is False
+
+
+def test_the_host_builds_a_client_once_both_are_in_place(
+    tmp_path: Path, routing_file: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("NEBIUS_BASE_URL", "https://example.invalid/v1")
+    monkeypatch.setenv("NEBIUS_API_KEY", "not-a-real-key")
+    host = Host(
+        driver=FakeDriver(speed=1000), data_dir=tmp_path / "s", routing_path=routing_file, session="x"
+    )
+    assert host.inference_ready is True
+    assert host.summarizer is not None
+
+
+def test_health_reports_whether_inference_is_ready(api: TestClient) -> None:
+    assert api.get("/api/health").json()["inference_ready"] in (True, False)

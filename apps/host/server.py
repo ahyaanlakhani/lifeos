@@ -31,6 +31,7 @@ for extra in (HOST_DIR, ROOT / "packages" / "inference", ROOT):
 
 from events import EventLog, new_session_id, parse_log_line  # noqa: E402
 from nemoclaw import Decision, Scope, build_driver  # noqa: E402
+from summarize import Summarizer  # noqa: E402
 from watcher import WorkspaceWatcher  # noqa: E402
 
 import client as inference  # noqa: E402
@@ -62,6 +63,38 @@ class Host:
         self.watcher = WorkspaceWatcher(workspace) if workspace else None
         self.started_at = time.time()
         self._tasks: list[asyncio.Task[Any]] = []
+
+        self.client = self._build_client()
+        self.summarizer = Summarizer(self.log, self.client) if self.client else None
+
+    def _build_client(self) -> Any | None:
+        """An inference client, or None if the system cannot yet call out.
+
+        Two reasons it may be None, and both are normal right now: no Token
+        Factory credentials, or routing.yaml still holding scaffold
+        placeholders. Returning None is what keeps the host quiet instead of
+        emitting an error for every batch it cannot summarize.
+        """
+        try:
+            for task in inference.TASKS:
+                self.routing.model_for(task)
+        except (inference.PlaceholderModelError, inference.UnroutedTaskError, FileNotFoundError):
+            return None
+        try:
+            transport = inference.OpenAITransport()
+        except RuntimeError:
+            return None
+        return inference.InferenceClient(
+            transport=transport,
+            routing=self.routing,
+            emit=lambda event: self.log.emit(
+                event["kind"], event.get("agent", "system"), event["summary"], event.get("detail")
+            ),
+        )
+
+    @property
+    def inference_ready(self) -> bool:
+        return self.client is not None
 
     # -- memory -----------------------------------------------------------
 
@@ -101,6 +134,7 @@ class Host:
             return
         try:
             await grounding.run(
+                client=self.client,
                 emit=lambda event: self.log.emit(
                     event["kind"], event.get("agent", "system"), event["summary"], event.get("detail")
                 )
@@ -157,6 +191,9 @@ class Host:
             loop.create_task(self.run_egress_poll()),
             loop.create_task(self.run_grounding()),
         ]
+        if self.summarizer is not None:
+            self.summarizer.attach()
+            self._tasks.append(loop.create_task(self.summarizer.run()))
         if self.watcher is not None:
             self._tasks.append(loop.create_task(self.run_watcher()))
 
@@ -205,6 +242,7 @@ def create_app(host: Host | None = None, background: bool = True) -> FastAPI:
             "uptime_s": round(time.time() - state.started_at, 1),
             "driver": type(state.driver).__name__,
             "demo": os.environ.get("DEMO", "true"),
+            "inference_ready": state.inference_ready,
             "events": len(state.log),
         }
 

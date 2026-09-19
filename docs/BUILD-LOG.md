@@ -92,3 +92,16 @@ from a running log reads specific rather than generic, which is visible.
 - The grounding judge routes to `plan` (Ultra) and parses a chatty verdict
   down to one word, falling back to `unverified`. An unparsed verdict must
   never read as `confirmed`.
+- Nano batch summarization built. Collects pending events over a 2 s window, up
+  to 20 at a time, one call per batch, patched back in. A batch whose length
+  does not match the number of events is rejected outright and the lines stay
+  raw — misaligned summaries would put the wrong sentence on the wrong event,
+  which is worse than raw text because it looks right.
+- The host now declines to build an inference client at all while routing.yaml
+  holds placeholders or credentials are missing, rather than emitting an error
+  per batch. `/api/health` reports `inference_ready` so it is obvious why the
+  timeline is still showing raw lines.
+- Demo-mode audit is now a test that runs on every commit rather than a
+  week-five ritual: every endpoint answers with no credentials, plus standing
+  guards that no tracked file contains anything shaped like an API key and that
+  .env.example holds only names.
