@@ -1,0 +1,25 @@
+# TLS in front of the agent host and Glass Box.
+#
+# Replace lifeos.example with the real hostname before week 5. Caddy gets a
+# certificate automatically, which is the whole reason it is here rather than
+# nginx.
+
+lifeos.example {
+	# The event stream is a WebSocket; Caddy upgrades these without extra config.
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3000
+	}
+
+	encode gzip zstd
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}

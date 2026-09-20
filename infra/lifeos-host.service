@@ -1,0 +1,33 @@
+# systemd --user unit for running the agent host directly on the VM, without
+# Docker. The alternative to compose, and the simpler path while NemoClaw is
+# still being worked out: one less layer between the host and the CLI it drives.
+#
+#   mkdir -p ~/.config/systemd/user
+#   cp infra/lifeos-host.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now lifeos-host
+#   loginctl enable-linger $USER    # survive logout; SSH drops otherwise kill it
+
+[Unit]
+Description=LifeOS agent host
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/lifeos
+EnvironmentFile=%h/lifeos/.env
+ExecStart=/usr/bin/python3 -m apps.host
+Restart=always
+RestartSec=3
+
+# Alpha software under a six-week deadline: restart it, but notice if it is
+# thrashing rather than quietly restarting forever.
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

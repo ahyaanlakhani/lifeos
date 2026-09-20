@@ -171,3 +171,14 @@ from a running log reads specific rather than generic, which is visible.
   bursts; stepping event by event is what someone auditing a run wants.
   Playback still paces by the real gap, clamped to 3s so an idle stretch does
   not stall it.
+- Deploy config written ahead of week 5: `infra/compose.yml`, two Dockerfiles,
+  a Caddyfile for automatic TLS, and a systemd user unit for the simpler path.
+  Sandboxes are deliberately absent from compose — the agent host owns their
+  lifecycle through the CLI, and two owners of one lifecycle is a bad trade.
+- `infra/README.md` carries the pre-launch checklist. The one most likely to
+  bite: `NEXT_PUBLIC_*` is inlined by Next at build time, so pointing Glass Box
+  at the real host URL needs a rebuild, not an env change. Second most likely:
+  a `wss://` upgrade that silently fails through the proxy leaves the timeline
+  looking empty rather than erroring.
+- Corrected the test count in the previous commit message: 373, not 371. Noted
+  here rather than rewriting a pushed commit.

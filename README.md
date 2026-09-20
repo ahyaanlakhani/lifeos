@@ -119,7 +119,7 @@ python -m pytest
 npm run typecheck --prefix apps/glassbox
 ```
 
-371 tests, all offline. Nothing in the suite reaches a network or spends a
+373 tests, all offline. Nothing in the suite reaches a network or spends a
 credit — the inference transport, the sandbox driver and the search client are
 all injectable, and recorded fixtures stand in for live responses. That is not
 tidiness: burning Token Factory credits on debug loops is a real way to lose a
