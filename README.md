@@ -17,14 +17,28 @@ it is doing and stop it mid-action from your phone.
 
 ## Try it — no credentials, no VM, no GPU
 
+Needs **Python 3.11+** and **Node 20+**. Nothing else — no GPU, no Docker, no
+API key.
+
 ```bash
-git clone https://github.com/ahyaanlakhani/lifeos && cd lifeos
+git clone https://github.com/ahyaanlakhani/lifeos
+cd lifeos
 python -m pip install -r requirements.txt
 npm install --prefix apps/glassbox
 ./scripts/demo.sh
 ```
 
 Glass Box on <http://localhost:3000>, the agent host on <http://localhost:8000>.
+First start takes about 30 seconds while Next compiles.
+
+On Windows, run `scripts/demo.sh` from Git Bash or WSL. From PowerShell, start
+the two processes yourself:
+
+```powershell
+$env:DEMO="true"; $env:DEMO_LOOP="1"
+Start-Process python -ArgumentList "-m","apps.host"
+npm run dev --prefix apps/glassbox
+```
 
 `DEMO=true` is the default, and it fails closed: if `DEMO` is unset or
 misspelt, the system reads synthetic fixtures rather than a real inbox. A
