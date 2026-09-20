@@ -18,7 +18,7 @@ it is doing and stop it mid-action from your phone.
 ## Try it — no credentials, no VM, no GPU
 
 ```bash
-git clone <this repo> && cd lifeos-nemotron
+git clone https://github.com/ahyaanlakhani/lifeos && cd lifeos
 python -m pip install -r requirements.txt
 npm install --prefix apps/glassbox
 ./scripts/demo.sh

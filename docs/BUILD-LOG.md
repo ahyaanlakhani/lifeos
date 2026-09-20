@@ -119,3 +119,15 @@ from a running log reads specific rather than generic, which is visible.
   host endpoints, all four Glass Box pages, the WebSocket, the grounding pass
   and the approval flow. No errors in the host log. `inference_ready` reports
   false, which is correct and visible.
+
+## 2026-09-20 — day 3, Week 1
+
+- Repo public: <https://github.com/ahyaanlakhani/lifeos>. MIT detected by
+  GitHub, ten commits, nothing unpushed.
+- Rewrote author and committer on all ten commits before publishing, and
+  deleted the `refs/original` backup filter-branch leaves behind — that backup
+  is easy to miss and would have carried the old identity into the public repo
+  anyway. Checked the whole object store afterwards rather than just the tip.
+- Pre-publish sweep over all 88 history blobs: nothing shaped like an API key,
+  `.env` never committed, no personal identifiers in any file content. Worth
+  having done before the repo went public rather than after.

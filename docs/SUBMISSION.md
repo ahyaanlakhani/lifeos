@@ -16,7 +16,8 @@ Re-check the rules on Devpost before submitting — they state they may change.
 - [ ] Working demo URL, reachable in demo mode without your credentials
 - [ ] Public YouTube video, 3:00 or under, with audio
 - [x] Public repo with an OSS licence visible at the top of the page — MIT,
-      committed in the first commit
+      committed in the first commit.
+      <https://github.com/ahyaanlakhani/lifeos>
 - [ ] README: setup, how to run, where Nemotron is used, where Token Factory
       accelerated the work, other Nebius services used
 - [ ] Feedback on Token Factory, AI Cloud and the NVIDIA tooling — write this
