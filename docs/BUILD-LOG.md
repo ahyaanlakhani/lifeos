@@ -131,3 +131,15 @@ from a running log reads specific rather than generic, which is visible.
 - Pre-publish sweep over all 88 history blobs: nothing shaped like an API key,
   `.env` never committed, no personal identifiers in any file content. Worth
   having done before the repo went public rather than after.
+- The documented install failed on Windows, found by watching someone run it
+  rather than by testing. `npm` on Windows is a PowerShell shim and the default
+  execution policy blocks it with `UnauthorizedAccess`; my own tooling runs
+  with `-ExecutionPolicy Bypass`, which is exactly why I never saw it. Fix is
+  `npm.cmd`, a batch file the policy does not apply to — no security setting
+  changes. Added `scripts/demo.cmd`, which wraps `demo.ps1` with a
+  per-invocation bypass, because a bare `.ps1` would hit the same wall.
+- Both demo scripts now install `node_modules` on first run, and `.gitattributes`
+  keeps the Windows entry points on CRLF.
+- Worth carrying into the feedback section: the demo URL requirement means
+  judges will run this cold on an unknown machine. Everything above was
+  invisible until someone actually did.

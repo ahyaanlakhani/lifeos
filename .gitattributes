@@ -1,0 +1,7 @@
+# Normalise to LF in the repo, and check out platform-appropriate endings.
+* text=auto eol=lf
+
+# Windows entry points must keep CRLF. A .cmd with LF endings can break on
+# labels and multi-line constructs, and the failure is obscure.
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

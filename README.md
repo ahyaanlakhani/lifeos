@@ -24,26 +24,35 @@ API key.
 git clone https://github.com/ahyaanlakhani/lifeos
 cd lifeos
 python -m pip install -r requirements.txt
-npm install --prefix apps/glassbox
+```
+
+Then, on **Windows** (works in PowerShell and cmd):
+
+```
+scripts\demo.cmd
+```
+
+On **macOS, Linux, WSL or Git Bash**:
+
+```bash
 ./scripts/demo.sh
 ```
 
-Glass Box on <http://localhost:3000>, the agent host on <http://localhost:8000>.
-First start takes about 30 seconds while Next compiles.
-
-On Windows, run `scripts/demo.sh` from Git Bash or WSL. From PowerShell, start
-the two processes yourself:
-
-```powershell
-$env:DEMO="true"; $env:DEMO_LOOP="1"
-Start-Process python -ArgumentList "-m","apps.host"
-npm run dev --prefix apps/glassbox
-```
+Either one installs the Glass Box dependencies on first run, starts the agent
+host on <http://localhost:8000> and Glass Box on <http://localhost:3000>, and
+stops both on Ctrl-C. The first start takes about 30 seconds while Next
+compiles.
 
 `DEMO=true` is the default, and it fails closed: if `DEMO` is unset or
 misspelt, the system reads synthetic fixtures rather than a real inbox. A
 scripted agent session drives the timeline, so every screen has something real
 to render.
+
+> **Windows note.** If you run `npm` yourself in PowerShell you may get
+> *"npm.ps1 cannot be loaded because running scripts is disabled"*. That is the
+> default execution policy blocking npm's PowerShell shim. Use `npm.cmd`
+> instead of `npm` — it is a batch file and the policy does not apply to it, so
+> nothing needs changing. `scripts\demo.cmd` already does this.
 
 ## What works today
 
