@@ -69,6 +69,16 @@ export const api = {
   memoryDiff: (limit = 50) =>
     request<{ changes: LifeEvent[] }>(`/api/memory/diff?limit=${limit}`),
 
+  sessions: () =>
+    request<{ sessions: { session: string; bytes: number; modified: number; live: boolean }[] }>(
+      "/api/sessions",
+    ),
+
+  replay: (id: string) =>
+    request<{ session: string; events: LifeEvent[]; started: number | null; ended: number | null }>(
+      `/api/sessions/${encodeURIComponent(id)}`,
+    ),
+
   routing: () => request<RoutingTable>("/api/routing"),
 
   setRouting: (updates: Record<string, string>) =>

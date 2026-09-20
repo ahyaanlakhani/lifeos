@@ -389,3 +389,57 @@ def test_the_host_builds_a_client_once_both_are_in_place(
 
 def test_health_reports_whether_inference_is_ready(api: TestClient) -> None:
     assert api.get("/api/health").json()["inference_ready"] in (True, False)
+
+
+# -- replay ---------------------------------------------------------------
+
+
+def test_sessions_lists_the_live_one(api: TestClient, host: Host) -> None:
+    host.log.emit("action", "system", "something")
+    rows = api.get("/api/sessions").json()["sessions"]
+    assert [r["session"] for r in rows] == ["test-session"]
+    assert rows[0]["live"] is True
+
+
+def test_sessions_are_newest_first(api: TestClient, host: Host, tmp_path: Path) -> None:
+    import os, time
+
+    host.log.emit("action", "system", "live")
+    older = host.log.path.parent / "20200101-000000-aaaaaa.jsonl"
+    older.write_text("", encoding="utf-8")
+    os.utime(older, (0, 0))
+
+    rows = api.get("/api/sessions").json()["sessions"]
+    assert rows[0]["session"] == "test-session"
+    assert rows[-1]["session"] == "20200101-000000-aaaaaa"
+
+
+def test_a_past_session_replays_from_disk(api: TestClient, host: Host) -> None:
+    """Read off disk, not from memory, so a session recorded before a restart
+    is still replayable — which is the point of writing JSONL at all."""
+    a = host.log.emit("action", "calendar", "raw line", summary_pending=True)
+    host.log.emit("search", "research", "searched")
+    host.log.patch_summary(a.id, "Checked the week")
+
+    body = api.get("/api/sessions/test-session").json()
+    assert [e["summary"] for e in body["events"]] == ["Checked the week", "searched"]
+    assert body["events"][0]["summary_pending"] is False
+    assert body["started"] <= body["ended"]
+
+
+def test_an_unknown_session_is_a_404(api: TestClient) -> None:
+    assert api.get("/api/sessions/nope").status_code == 404
+
+
+@pytest.mark.parametrize("bad", ["../secrets", "a/b", "..%2F..%2Fetc"])
+def test_a_traversal_attempt_is_rejected(api: TestClient, bad: str) -> None:
+    """The session id lands in a filesystem path. It does not get to contain
+    a path."""
+    assert api.get(f"/api/sessions/{bad}").status_code in (400, 404)
+
+
+def test_an_empty_session_replays_as_empty(api: TestClient, host: Host) -> None:
+    (host.log.path.parent / "empty-one.jsonl").write_text("", encoding="utf-8")
+    body = api.get("/api/sessions/empty-one").json()
+    assert body["events"] == []
+    assert body["started"] is None

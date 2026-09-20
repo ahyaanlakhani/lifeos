@@ -29,7 +29,7 @@ for extra in (HOST_DIR, ROOT / "packages" / "inference", ROOT):
     if str(extra) not in sys.path:
         sys.path.insert(0, str(extra))
 
-from events import EventLog, new_session_id, parse_log_line  # noqa: E402
+from events import EventLog, new_session_id, parse_log_line, read_session  # noqa: E402
 from nemoclaw import Decision, Scope, build_driver  # noqa: E402
 from summarize import Summarizer  # noqa: E402
 from watcher import WorkspaceWatcher  # noqa: E402
@@ -350,6 +350,51 @@ def create_app(host: Host | None = None, background: bool = True) -> FastAPI:
         Tavily — that is what the provenance badge renders.
         """
         return {"rows": state.memory_rows(), "source": state.memory_source}
+
+    # -- replay -----------------------------------------------------------
+
+    @app.get("/api/sessions")
+    async def sessions() -> dict[str, Any]:
+        """Past sessions, newest first.
+
+        Read off disk rather than tracked in memory, so a session recorded
+        before the host restarted is still replayable — which is the point of
+        writing JSONL at all.
+        """
+        rows = []
+        for path in sorted(state.log.path.parent.glob("*.jsonl")):
+            try:
+                stat = path.stat()
+            except OSError:
+                continue
+            rows.append(
+                {
+                    "session": path.stem,
+                    "bytes": stat.st_size,
+                    "modified": stat.st_mtime,
+                    "live": path.stem == state.session,
+                }
+            )
+        rows.sort(key=lambda r: r["modified"], reverse=True)
+        return {"sessions": rows}
+
+    @app.get("/api/sessions/{session_id}")
+    async def replay(session_id: str) -> dict[str, Any]:
+        """One session, oldest first, with summary patches already applied."""
+        if "/" in session_id or "\\" in session_id or ".." in session_id:
+            raise HTTPException(400, detail="bad session id")
+
+        path = state.log.path.parent / f"{session_id}.jsonl"
+        if not path.exists():
+            raise HTTPException(404, detail=f"no session {session_id!r}")
+
+        events = [e.to_dict() for e in read_session(path)]
+        return {
+            "session": session_id,
+            "events": events,
+            "started": events[0]["ts"] if events else None,
+            "ended": events[-1]["ts"] if events else None,
+        }
 
     # -- 6. routing -------------------------------------------------------
 

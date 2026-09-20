@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/approvals", label: "Approvals" },
   { href: "/memory", label: "Memory" },
   { href: "/routing", label: "Routing" },
+  { href: "/replay", label: "Replay" },
 ];
 
 export function Nav() {
