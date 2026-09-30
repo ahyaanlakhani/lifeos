@@ -74,10 +74,16 @@ export const api = {
       "/api/sessions",
     ),
 
-  replay: (id: string) =>
-    request<{ session: string; events: LifeEvent[]; started: number | null; ended: number | null }>(
-      `/api/sessions/${encodeURIComponent(id)}`,
-    ),
+  replay: (id: string, offset = 0, limit = 2000) =>
+    request<{
+      session: string;
+      events: LifeEvent[];
+      total: number;
+      offset: number;
+      limit: number;
+      started: number | null;
+      ended: number | null;
+    }>(`/api/sessions/${encodeURIComponent(id)}?offset=${offset}&limit=${limit}`),
 
   routing: () => request<RoutingTable>("/api/routing"),
 

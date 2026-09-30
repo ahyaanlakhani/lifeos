@@ -228,3 +228,37 @@ def test_a_batch_closes_early_when_it_hits_max_size(log: EventLog) -> None:
     # The first batch must not have waited out the 5 s window.
     assert client.calls[0]["messages"][0]["content"].count("\n") == 3
     assert summarizer.batches == 1
+
+
+# -- audit regressions ----------------------------------------------------
+
+
+def test_parsing_a_batch_does_not_grow_sys_path(log: EventLog) -> None:
+    """One duplicate entry per batch, and a batch runs every ~2s once
+    inference is live, on a host meant to run unattended for weeks."""
+    before = list(sys.path)
+    for _ in range(50):
+        parse_batch('["a"]', 1)
+    assert sys.path == before
+
+
+def test_the_queue_is_bounded_and_drops_oldest(log: EventLog) -> None:
+    """Falling behind visibly beats growing host memory without limit."""
+    import summarize as summarize_module
+
+    summarizer = Summarizer(log, ScriptedClient())
+    summarizer.queue = asyncio.Queue(maxsize=3)
+
+    events = [log.emit("action", "email", f"raw {i}", summary_pending=True) for i in range(10)]
+    for event in events:
+        summarizer.enqueue(event)
+
+    assert summarizer.queue.qsize() == 3
+    assert summarizer.dropped == 7
+    assert summarizer.queue.get_nowait().summary == "raw 7"
+
+
+def test_the_queue_limit_is_set_by_default() -> None:
+    import summarize as summarize_module
+
+    assert summarize_module.QUEUE_LIMIT > 0

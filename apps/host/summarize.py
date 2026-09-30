@@ -31,10 +31,16 @@ HOST_DIR = Path(__file__).resolve().parent
 if str(HOST_DIR) not in sys.path:
     sys.path.insert(0, str(HOST_DIR))
 
+_INFERENCE_DIR = HOST_DIR.parents[1] / "packages" / "inference"
+if str(_INFERENCE_DIR) not in sys.path:
+    sys.path.insert(0, str(_INFERENCE_DIR))
+
 from events import Event, EventLog  # noqa: E402
+from tools import repair_json  # noqa: E402
 
 WINDOW_SECONDS = 2.0
 MAX_BATCH = 20
+QUEUE_LIMIT = 2000
 
 SYSTEM_PROMPT = """You rewrite raw agent log lines into one short sentence each, for a live activity feed a person is watching.
 
@@ -60,11 +66,6 @@ def parse_batch(raw: str, expected: int) -> list[str] | None:
     the wrong events — a worse failure than leaving them raw, because it looks
     right.
     """
-    import sys as _sys
-
-    _sys.path.insert(0, str(HOST_DIR.parents[1] / "packages" / "inference"))
-    from tools import repair_json
-
     parsed = repair_json(raw) if raw else None
     if parsed is None:
         # The model may have returned a bare array the object-carver missed.
@@ -94,13 +95,26 @@ class Summarizer:
         self.client = client
         self.window = window
         self.max_batch = max_batch
-        self.queue: asyncio.Queue[Event] = asyncio.Queue()
+        # Bounded, and drops oldest when full. If Nano cannot keep up, the
+        # feed should fall behind visibly rather than grow host memory without
+        # limit on a machine meant to run unattended for weeks.
+        self.queue: asyncio.Queue[Event] = asyncio.Queue(maxsize=QUEUE_LIMIT)
+        self.dropped = 0
         self.batches = 0
         self.summarized = 0
 
     def enqueue(self, event: Event) -> None:
-        if event.summary_pending:
+        if not event.summary_pending:
+            return
+        try:
             self.queue.put_nowait(event)
+        except asyncio.QueueFull:
+            try:
+                self.queue.get_nowait()
+                self.queue.put_nowait(event)
+                self.dropped += 1
+            except (asyncio.QueueEmpty, asyncio.QueueFull):  # pragma: no cover
+                pass
 
     def attach(self) -> Any:
         """Subscribe to the log. Returns the unsubscribe callable."""

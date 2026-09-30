@@ -101,14 +101,33 @@ def _span(event: dict[str, Any]) -> tuple[datetime, datetime]:
     return datetime.fromisoformat(event["start"]), datetime.fromisoformat(event["end"])
 
 
+def _calendar_tzinfo() -> Any:
+    """The offset the calendar's own events are written in."""
+    events = loader.load("calendar")["events"]
+    return datetime.fromisoformat(events[0]["start"]).tzinfo
+
+
+def _as_aware(value: str, field: str) -> datetime:
+    """Parse a timestamp, assuming the calendar's offset if none is given.
+
+    Models routinely emit '2026-10-01T10:00:00' with no offset, because the
+    tool schema says only "ISO timestamp". Comparing that to the calendar's
+    aware datetimes raises TypeError — which the ValueError guard did not
+    catch, so the agent got a confusing crash instead of an answer. Assuming
+    the calendar's own offset is what a person means by "10:00" anyway.
+    """
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError(f"{field} must be an ISO timestamp, got {value!r}") from exc
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=_calendar_tzinfo())
+
+
 def check_availability(start: str, end: str) -> dict[str, Any]:
     """Whether a window is free, and what is in the way if not."""
     _require_demo("calendar")
-    try:
-        window_start = datetime.fromisoformat(start)
-        window_end = datetime.fromisoformat(end)
-    except ValueError as exc:
-        raise ValueError(f"start and end must be ISO timestamps: {exc}") from exc
+    window_start = _as_aware(start, "start")
+    window_end = _as_aware(end, "end")
 
     clashes = []
     for event in list_events(days=60):

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import sys
 import time
 from contextlib import asynccontextmanager
@@ -22,6 +23,12 @@ from typing import Any
 
 from fastapi import Body, FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+
+# A session left running here reached 33,930 events in a few hours. The page
+# size is what the Replay screen fetches at a time; the ceiling is what any
+# caller may ask for at once.
+REPLAY_PAGE = 2000
+REPLAY_MAX_PAGE = 10000
 
 HOST_DIR = Path(__file__).resolve().parent
 ROOT = HOST_DIR.parents[1]
@@ -379,19 +386,29 @@ def create_app(host: Host | None = None, background: bool = True) -> FastAPI:
         return {"sessions": rows}
 
     @app.get("/api/sessions/{session_id}")
-    async def replay(session_id: str) -> dict[str, Any]:
-        """One session, oldest first, with summary patches already applied."""
-        if "/" in session_id or "\\" in session_id or ".." in session_id:
-            raise HTTPException(400, detail="bad session id")
+    async def replay(
+        session_id: str,
+        offset: int = Query(0, ge=0),
+        limit: int = Query(REPLAY_PAGE, ge=1, le=REPLAY_MAX_PAGE),
+    ) -> dict[str, Any]:
+        """One page of a session, oldest first, patches already applied.
 
-        path = state.log.path.parent / f"{session_id}.jsonl"
-        if not path.exists():
-            raise HTTPException(404, detail=f"no session {session_id!r}")
+        Paged, because sessions get large. A host left running produced a
+        13.6 MB / 33,930-event file in a few hours here, and on the VM it runs
+        for days; returning the whole thing would hand the judges' browser a
+        response it cannot render.
+        """
+        path = _session_path(state, session_id)
 
         events = [e.to_dict() for e in read_session(path)]
+        total = len(events)
+        page = events[offset : offset + limit]
         return {
             "session": session_id,
-            "events": events,
+            "events": page,
+            "total": total,
+            "offset": offset,
+            "limit": limit,
             "started": events[0]["ts"] if events else None,
             "ended": events[-1]["ts"] if events else None,
         }
@@ -410,9 +427,8 @@ def create_app(host: Host | None = None, background: bool = True) -> FastAPI:
         if any(not isinstance(v, str) or not v.strip() for v in updates.values()):
             raise HTTPException(422, detail="model ids must be non-empty strings")
 
+        _write_routing(state.routing.path, {k: v.strip() for k, v in updates.items()})
         table = state.routing.table()
-        table.update({k: v.strip() for k, v in updates.items()})
-        _write_routing(state.routing.path, table)
 
         state.log.emit(
             "action",
@@ -464,22 +480,78 @@ def _allowed_origins() -> list[str]:
     return ["http://localhost:3000", "http://127.0.0.1:3000"]
 
 
-def _write_routing(path: Path, table: dict[str, str]) -> None:
-    """Rewrite routing.yaml, preserving the comment header.
+def _session_path(state: "Host", session_id: str) -> Path:
+    """Resolve a session id to a file, or raise.
 
-    Glass Box writing this file is a real feature and the cleanest way to demo
-    tiering on camera, so the file has to stay readable by a human afterwards.
+    Containment is checked on the *resolved* path rather than by blacklisting
+    characters. The previous version rejected '/', '\\' and '..', which let a
+    Windows drive-relative id through: Path('data/sessions') / 'C:evil.jsonl'
+    evaluates to WindowsPath('C:evil.jsonl'), because pathlib discards the
+    left-hand side when the right has a drive. Blacklists keep losing to the
+    next bit of path syntax; asking where the path actually landed does not.
     """
-    existing = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
-    header = []
-    for line in existing:
-        if line.strip() and not line.lstrip().startswith("#"):
-            break
-        header.append(line)
+    root = state.log.path.parent.resolve()
+    try:
+        candidate = (root / f"{session_id}.jsonl").resolve()
+        candidate.relative_to(root)
+    except (ValueError, OSError):
+        raise HTTPException(400, detail="bad session id") from None
 
-    body = [f"{task}: {table[task]!r}".replace("'", '"') for task in inference.TASKS if task in table]
-    extras = [f"{k}: {v!r}".replace("'", '"') for k, v in sorted(table.items()) if k not in inference.TASKS]
-    path.write_text("\n".join([*header, *body, *extras]) + "\n", encoding="utf-8")
+    if not candidate.is_file():
+        raise HTTPException(404, detail=f"no session {session_id!r}")
+    return candidate
+
+
+_ROUTING_LINE = re.compile(r"^(?P<key>[A-Za-z_][\w-]*)(?P<sep>:\s*)(?P<value>\S.*?)(?P<trail>\s*)$")
+
+
+def _yaml_scalar(value: str) -> str:
+    """A double-quoted YAML scalar, escaped.
+
+    The previous version used repr() and then replaced every single quote with
+    a double one, which produced `plan: "we"ird"` for any value containing a
+    quote — silent corruption of the one file that decides which model every
+    agent uses.
+    """
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _write_routing(path: Path, updates: dict[str, str]) -> None:
+    """Change only the named top-level keys, in place.
+
+    Rewritten as a line edit rather than a regeneration. The previous version
+    rebuilt the file from the routing table, which holds only string values —
+    so every tier switch silently deleted the `pricing:` block and with it the
+    cost meter. The demo beat that flips Super to Ultra was destroying the
+    meter it exists to move.
+
+    Only top-level, unindented keys are touched. Nested mappings, comments,
+    blank lines and key order all survive untouched, because the safest way to
+    not break the rest of the file is to not rewrite the rest of the file.
+    """
+    lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+    remaining = dict(updates)
+
+    for index, line in enumerate(lines):
+        if line[:1].isspace():
+            continue  # nested — not ours to touch
+        match = _ROUTING_LINE.match(line)
+        if not match:
+            continue
+        key = match.group("key")
+        if key not in remaining:
+            continue
+        comment = ""
+        raw = match.group("value")
+        if " #" in raw:  # keep a trailing comment on the line
+            comment = "  " + raw[raw.index(" #") + 1 :].strip()
+        lines[index] = f"{key}:{match.group('sep')[1:] or ' '}{_yaml_scalar(remaining.pop(key))}{comment}"
+
+    # A task the file never defined gets appended rather than lost.
+    for key, value in remaining.items():
+        lines.append(f"{key}: {_yaml_scalar(value)}")
+
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 app = create_app() if os.environ.get("LIFEOS_HOST_AUTOSTART", "") else None

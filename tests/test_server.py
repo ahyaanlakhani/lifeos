@@ -21,6 +21,7 @@ for extra in (ROOT / "apps" / "host", ROOT / "packages" / "inference"):
 import nemoclaw  # noqa: E402
 from events import parse_log_line  # noqa: E402
 from nemoclaw import FakeDriver  # noqa: E402
+from fastapi import HTTPException  # noqa: E402
 from server import Host, create_app  # noqa: E402
 
 
@@ -443,3 +444,160 @@ def test_an_empty_session_replays_as_empty(api: TestClient, host: Host) -> None:
     body = api.get("/api/sessions/empty-one").json()
     assert body["events"] == []
     assert body["started"] is None
+
+
+# -- audit regressions ----------------------------------------------------
+#
+# Each of these fails against the code as it was before 2026-09-30. The
+# original tests passed because the routing fixture had no `pricing` block and
+# the replay fixtures held a dozen events, so neither failure mode was
+# reachable from the suite.
+
+
+@pytest.fixture()
+def rich_routing_file(tmp_path: Path) -> Path:
+    """Shaped like the real routing.yaml: comments, inline comments, nesting."""
+    path = tmp_path / "routing.yaml"
+    path.write_text(
+        "# header comment\n"
+        "#\n"
+        'plan:      "ultra-id"   # daily planning\n'
+        'execute:   "super-id"   # the default tier\n'
+        'summarize: "nano-id"\n'
+        "\n"
+        "# cost meter\n"
+        "pricing:\n"
+        "  super-id:\n"
+        "    input_per_mtok: 3.0\n"
+        "    output_per_mtok: 9.0\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_a_tier_switch_does_not_destroy_the_pricing_block(
+    tmp_path: Path, rich_routing_file: Path
+) -> None:
+    """The 2:30 demo beat used to delete the cost meter it exists to move."""
+    host = Host(
+        driver=FakeDriver(speed=1000),
+        data_dir=tmp_path / "s",
+        routing_path=rich_routing_file,
+        session="x",
+    )
+    with TestClient(create_app(host, background=False)) as api:
+        api.post("/api/routing", json={"execute": "ultra-id"})
+
+    text = rich_routing_file.read_text(encoding="utf-8")
+    assert "pricing:" in text
+    assert "input_per_mtok: 3.0" in text
+    assert host.routing.cost("super-id", 1_000_000, 1_000_000) == pytest.approx(12.0)
+
+
+def test_a_tier_switch_preserves_comments_and_key_order(rich_routing_file: Path, tmp_path: Path) -> None:
+    host = Host(driver=FakeDriver(speed=1000), data_dir=tmp_path / "s",
+                routing_path=rich_routing_file, session="x")
+    with TestClient(create_app(host, background=False)) as api:
+        api.post("/api/routing", json={"execute": "ultra-id"})
+
+    lines = rich_routing_file.read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "# header comment"
+    assert [l.split(":")[0] for l in lines if l and not l.startswith(("#", " "))] == [
+        "plan", "execute", "summarize", "pricing",
+    ]
+    assert "# the default tier" in "\n".join(lines)
+
+
+def test_a_model_id_containing_a_quote_is_escaped_not_corrupted(
+    rich_routing_file: Path, tmp_path: Path
+) -> None:
+    yaml = pytest.importorskip("yaml")
+    host = Host(driver=FakeDriver(speed=1000), data_dir=tmp_path / "s",
+                routing_path=rich_routing_file, session="x")
+    with TestClient(create_app(host, background=False)) as api:
+        api.post("/api/routing", json={"execute": 'we"ird'})
+
+    parsed = yaml.safe_load(rich_routing_file.read_text(encoding="utf-8"))
+    assert parsed["execute"] == 'we"ird'
+
+
+def test_replay_is_paged_rather_than_returning_the_whole_file(
+    api: TestClient, host: Host
+) -> None:
+    """A session here reached 33,930 events in a few hours; the unpaged
+    endpoint would hand the judges' browser all of it."""
+    for i in range(250):
+        host.log.emit("action", "system", f"e{i}")
+
+    body = api.get("/api/sessions/test-session", params={"limit": 100}).json()
+    assert body["total"] == 250
+    assert len(body["events"]) == 100
+    assert body["events"][0]["summary"] == "e0"
+
+    page2 = api.get("/api/sessions/test-session", params={"offset": 100, "limit": 100}).json()
+    assert page2["events"][0]["summary"] == "e100"
+
+    tail = api.get("/api/sessions/test-session", params={"offset": 240, "limit": 100}).json()
+    assert len(tail["events"]) == 10
+
+
+def test_replay_refuses_an_absurd_page_size(api: TestClient) -> None:
+    assert api.get("/api/sessions/test-session", params={"limit": 10_000_000}).status_code == 422
+
+
+@pytest.mark.parametrize("bad", ["C:evil", "..", "../../secrets", "a/b", r"a\b"])
+def test_a_session_id_cannot_escape_the_sessions_directory(api: TestClient, bad: str) -> None:
+    """Containment is checked on the resolved path. The old blacklist let a
+    Windows drive-relative id through, because pathlib discards the left-hand
+    side of a join when the right has a drive."""
+    assert api.get(f"/api/sessions/{bad}").status_code in (400, 404)
+
+
+def test_a_drive_relative_id_cannot_read_a_file_outside_the_sessions_dir(
+    tmp_path: Path, routing_file: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The specific hole the old blacklist left, exercised against a file that
+    really exists. A status-code assertion alone proves nothing here, because
+    a nonexistent path 404s however it was resolved.
+
+    On Windows `Path('sessions') / 'C:evil.jsonl'` becomes
+    WindowsPath('C:evil.jsonl'), which resolves against the process's current
+    directory on drive C: — outside the sessions directory entirely.
+    """
+    if sys.platform != "win32":
+        pytest.skip("drive-relative paths are a Windows behaviour")
+
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "evil.jsonl").write_text(
+        '{"kind":"action","agent":"system","summary":"SECRET-CANARY",'
+        '"session":"x","detail":{},"ts":1.0,"id":"a"}\n',
+        encoding="utf-8",
+    )
+
+    host = Host(driver=FakeDriver(speed=1000), data_dir=tmp_path / "sessions",
+                routing_path=routing_file, session="live")
+    with TestClient(create_app(host, background=False)) as client:
+        response = client.get("/api/sessions/C:evil")
+
+    assert "SECRET-CANARY" not in response.text
+    assert response.status_code in (400, 404)
+
+
+def test_the_containment_check_is_on_the_resolved_path(
+    tmp_path: Path, routing_file: Path
+) -> None:
+    """Stated as a property rather than a list of inputs, because a blacklist
+    of characters is precisely what failed here."""
+    from server import _session_path
+
+    host = Host(driver=FakeDriver(speed=1000), data_dir=tmp_path / "sessions",
+                routing_path=routing_file, session="live")
+    root = host.log.path.parent.resolve()
+    (tmp_path / "escaped.jsonl").write_text("", encoding="utf-8")
+
+    for candidate in ("../escaped", r"..\escaped", "C:escaped", "escaped"):
+        try:
+            resolved = _session_path(host, candidate)
+        except HTTPException:
+            continue
+        assert resolved.resolve().is_relative_to(root), candidate

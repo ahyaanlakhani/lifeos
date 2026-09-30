@@ -26,6 +26,7 @@ interface SessionRow {
 }
 
 const SPEEDS = [1, 2, 4, 16] as const;
+const PAGE = 2000;
 
 function when(ts: number): string {
   return new Date(ts * 1000).toLocaleString([], {
@@ -46,6 +47,8 @@ export default function Replay() {
   const [speed, setSpeed] = useState<number>(4);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [loadedFrom, setLoadedFrom] = useState(0);
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -59,22 +62,48 @@ export default function Replay() {
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, []);
 
+  // Sessions get large — one here reached 33,930 events — so the endpoint is
+  // paged and this loads the most recent page first. That is the part anyone
+  // auditing a run actually wants; earlier pages load on request.
   const load = useCallback(async (id: string) => {
     if (!id) return;
     setLoading(true);
     setPlaying(false);
     try {
-      const body = await api.replay(id);
+      const head = await api.replay(id, 0, 1);
+      const count = head.total;
+      const start = Math.max(0, count - PAGE);
+      const body = count > 0 ? await api.replay(id, start, PAGE) : head;
+
       setEvents(body.events);
+      setTotal(count);
+      setLoadedFrom(count > 0 ? start : 0);
       setCursor(body.events.length);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setEvents([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const loadEarlier = useCallback(async () => {
+    if (!selected || loadedFrom === 0) return;
+    const start = Math.max(0, loadedFrom - PAGE);
+    setLoading(true);
+    try {
+      const body = await api.replay(selected, start, loadedFrom - start);
+      setEvents((current) => [...body.events, ...current]);
+      setCursor((c) => c + body.events.length);
+      setLoadedFrom(start);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [selected, loadedFrom]);
 
   useEffect(() => {
     load(selected);
@@ -137,8 +166,8 @@ export default function Replay() {
           <div className="stat">
             <div className="label">position</div>
             <div className="value">
-              {cursor}
-              <span style={{ color: "var(--text-faint)" }}> / {events.length}</span>
+              {loadedFrom + cursor}
+              <span style={{ color: "var(--text-faint)" }}> / {total || events.length}</span>
             </div>
           </div>
           <div className="stat">
@@ -168,6 +197,11 @@ export default function Replay() {
         />
 
         <div className="toolbar">
+          {loadedFrom > 0 && (
+            <button onClick={loadEarlier} disabled={loading}>
+              ↑ Load earlier ({loadedFrom.toLocaleString()})
+            </button>
+          )}
           <button onClick={() => setCursor(0)} disabled={cursor === 0}>
             ⏮ Start
           </button>

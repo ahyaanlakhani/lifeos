@@ -182,3 +182,36 @@ from a running log reads specific rather than generic, which is visible.
   looking empty rather than erroring.
 - Corrected the test count in the previous commit message: 373, not 371. Noted
   here rather than rewriting a pushed commit.
+
+## 2026-09-30 — audit fixes
+
+- Ran a full code review over the branch. Seven findings, all now fixed, all
+  with regression tests that were verified to fail against the pre-fix code by
+  stashing the source and re-running.
+- The two that mattered were both failures that only show up on camera:
+  1. `POST /api/routing` rebuilt routing.yaml from the routing table, which
+     holds only string values — so every tier switch silently deleted the
+     `pricing:` block. The 2:30 demo beat was destroying the cost meter it
+     exists to move. Rewritten as an in-place line edit: only the named
+     top-level keys change, and comments, nesting and key order survive
+     because the safest way not to break the rest of the file is not to
+     rewrite the rest of the file.
+  2. `GET /api/sessions/{id}` returned the whole session. A host left running
+     here produced a 20.8 MB / 53,045-event file; unpaged that is a response
+     no browser renders, and it is the judges' URL. Now paged — 818 KB per
+     page — with the Replay screen loading the most recent page first and
+     fetching earlier ones on request.
+- Why the suite missed both: the routing fixture had no `pricing` block and
+  the replay fixtures held a dozen events. Test data that is tidier than
+  production data hides exactly the bugs that production data causes. Both
+  fixtures now match the shape of the real thing.
+- Also fixed: a Windows drive-relative session id escaped the sessions
+  directory past a character blacklist (containment is now checked on the
+  resolved path); a naive ISO timestamp raised TypeError past the ValueError
+  guard in `check_availability`, which models trigger constantly because the
+  schema says only "ISO timestamp"; `parse_batch` grew `sys.path` by one entry
+  per batch; the summarizer queue was unbounded.
+- One test I wrote is honest but weak and stays marked as such: the
+  drive-relative canary passes against the old code too, because a
+  nonexistent path 404s however it was resolved. The property-based
+  containment test is the one that actually discriminates.

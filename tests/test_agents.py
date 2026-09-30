@@ -342,3 +342,31 @@ def test_the_email_agent_cannot_send_even_when_the_model_tries(
     result = run(registry.build("email", TriesToSend(), events.append).run("Handle the inbox"))
     assert result.blocked == ["send_email"]
     assert any("needs human approval" in e["summary"] for e in events)
+
+
+# -- audit regression -----------------------------------------------------
+
+
+def test_a_naive_timestamp_is_assumed_to_be_in_the_calendar_offset() -> None:
+    """Models emit '2026-10-01T10:00:00' constantly because the schema says
+    only "ISO timestamp". This used to raise TypeError past the ValueError
+    guard and hand the agent a crash instead of an answer."""
+    day = data.today().isoformat()
+    naive = data.check_availability(f"{day}T04:00:00", f"{day}T04:30:00")
+    aware = data.check_availability(f"{day}T04:00:00+01:00", f"{day}T04:30:00+01:00")
+    assert naive == aware
+    assert naive["free"] is True
+
+
+def test_a_naive_timestamp_still_detects_a_clash() -> None:
+    standup = next(e for e in data.list_events(days=7) if e["id"] == "evt_0001")
+    naive_start = standup["start"][:19]   # strip the offset
+    naive_end = standup["end"][:19]
+    result = data.check_availability(naive_start, naive_end)
+    assert result["free"] is False
+    assert any(c["id"] == "evt_0001" for c in result["clashes"])
+
+
+def test_genuinely_unparseable_timestamps_still_raise_value_error() -> None:
+    with pytest.raises(ValueError, match="ISO timestamp"):
+        data.check_availability("tomorrow", "later")
