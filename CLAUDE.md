@@ -28,7 +28,6 @@ Video shot by 26 Oct. Submit 28 Oct.
 - packages/inference   Token Factory client, tool translation, routing.yaml
 - packages/agents      calendar, email, research (ported); others are legacy
 - packages/memory      Supabase + pgvector + NVIDIA embeddings
-- voice/               Parakeet + Pipecat (VM only)
 - fixtures/            demo-mode data
 - infra/policies/      OpenShell egress allowlists, one per agent
 - jobs/                Nebius Serverless Jobs (nightly synthesis)
@@ -41,6 +40,10 @@ packages/inference/routing.yaml, hot-reloaded:
 - summarize -> Nemotron 3 Nano    (event feed, classification)
 
 Develop against Nano. Never hardcode a model id in agent code.
+
+## Out of scope
+Voice (Parakeet, Pipecat, MagpieTTS) was cut on 30 Sep 2026 after the week-1
+gate slipped. Do not add it back without being asked.
 
 ## Legacy
 CRM, Networking, Internship and Content agents are pre-existing and OUT OF

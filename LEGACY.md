@@ -28,11 +28,15 @@ Everything under:
 - `apps/host/` — agent host, event stream, approvals API
 - `apps/glassbox/` — the Glass Box control plane
 - `infra/policies/` — OpenShell egress allowlists
-- `voice/` — Parakeet + Pipecat pipeline
 - `jobs/` — Nebius Serverless Jobs
 - `fixtures/` — synthetic demo mode
 
 plus the Nemotron port of the Calendar, Email and Research agents, and the
 swap of the memory embedding model to NVIDIA's.
+
+A voice interface on NVIDIA Parakeet was planned and **cut on 30 Sep 2026**
+after the week-1 gate slipped. It is listed here as not-done rather than
+omitted, because this file is the disclosure a judge can check against the
+repository, and a quiet omission reads worse than a stated cut.
 
 Carried-over source files carry a `LEGACY:` header comment.

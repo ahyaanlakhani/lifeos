@@ -69,8 +69,13 @@ to render.
 | **Tavily** | The Research agent's search tool, and the memory-grounding pass. |
 | **Nano summarization** | Batched rewrite of raw log lines into the activity feed. Built and tested; dormant until a Token Factory key and real model ids exist. |
 
-**Not built yet:** voice (Parakeet + Pipecat), the embedding swap, editing a
-memory fact from the UI, and any real model call.
+**Not built yet:** the embedding swap, editing a memory fact from the UI, and
+any real model call.
+
+**Cut from scope on 30 Sep:** voice (Parakeet + Pipecat). Week 1's gate — one
+agent on Nemotron inside a sandbox — was due 24 Sep, and the build plan's rule
+was to drop voice if that slipped past the 28th. Glass Box was designed to
+stand alone without it.
 
 ## Where NVIDIA and Nebius are used
 
@@ -82,7 +87,6 @@ memory fact from the UI, and any real model call.
 | Nebius Token Factory | All LLM inference, OpenAI-compatible endpoint | client built |
 | NemoClaw + OpenShell | Per-agent sandboxing with egress allowlists | driver built, CLI unverified |
 | NVIDIA embeddings | pgvector memory index | week 4 |
-| NVIDIA Parakeet | Voice input | week 4 |
 | Nebius AI Cloud | GPU VM hosting the host, sandboxes and voice | week 1 |
 | Nebius Serverless Jobs | Nightly memory synthesis and grounding | job written, not yet deployed |
 | Tavily | Research search, memory-claim grounding | built |
@@ -99,7 +103,6 @@ screen and the cost meter possible at all.
     packages/inference Token Factory client, tool translation, routing.yaml
     packages/agents    calendar, email, research (ported)
     packages/memory    Supabase + pgvector + NVIDIA embeddings
-    voice/             Parakeet + Pipecat pipeline (VM only)
     jobs/              Nebius Serverless Jobs
     fixtures/          demo-mode data
     infra/policies/    OpenShell egress allowlists, one per agent

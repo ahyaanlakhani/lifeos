@@ -42,7 +42,7 @@ ceiling is Personal AI track winner plus Best Use of Tavily.
 
 | Criterion | Where this project stands |
 |---|---|
-| Technological implementation | NemoClaw, OpenShell, three Nemotron tiers, NVIDIA embeddings, Parakeet |
+| Technological implementation | NemoClaw, OpenShell, three Nemotron tiers, NVIDIA embeddings |
 | Design | Glass Box exists for exactly this. A quarter of the score. |
 | Potential impact | Argue the **governance** problem, not "personal assistant" generally |
 | Quality of the idea | Visible agent governance is the non-obvious part |
@@ -73,7 +73,6 @@ Adapt to what is actually true on submission day.
 >   replay — entirely new, roughly N thousand lines
 > - Replaced the memory embedding model with NVIDIA's Nemotron embedding model
 >   and re-indexed the vector store
-> - Added a voice interface built on NVIDIA Parakeet
 > - Moved nightly memory synthesis onto Nebius Serverless Jobs using
 >   Nemotron 3 Ultra, including a Tavily-backed grounding pass that marks
 >   remembered claims confirmed, stale or contradicted
@@ -85,6 +84,10 @@ Adapt to what is actually true on submission day.
 
 Fill in N from `git diff --stat` against the first commit. Do not round up.
 
+Voice was cut on 30 Sep and is deliberately absent from the list above. Do not
+disclose work that was not done — the disclosure is the one part of the
+submission a judge can check against the repository.
+
 ## Feedback section — raw material
 
 Write from `docs/BUILD-LOG.md`. Specific beats generic, and specificity is
@@ -95,6 +98,9 @@ visible to anyone reading it. Threads worth developing, already logged:
 - What the three week-one unknowns turned out to be, and how much design
   hinged on them
 - Tool-calling reliability on Nemotron versus what the adapter had to absorb
-- Whether Token Factory served the embedding and speech models, or whether
-  self-hosting on AI Cloud was needed
+- Whether Token Factory served the embedding model, or whether self-hosting
+  on AI Cloud was needed
+- Cutting voice on 30 Sep: the schedule had a decision rule for it, and having
+  the rule written down in advance made the call cost about a minute instead
+  of a day of hedging
 - Serverless Jobs for the nightly pass: cold starts, scheduling, cost

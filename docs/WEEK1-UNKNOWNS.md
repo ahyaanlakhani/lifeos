@@ -39,10 +39,12 @@ While in the console for Step 1, note:
 - [ ] Nemotron 3 Super id:
 - [ ] Nemotron 3 Ultra id:
 - [ ] Is `llama-nemotron-embed-1b-v2` (or any NVIDIA embedding model) served?
-- [ ] Is any NVIDIA speech model (Parakeet / MagpieTTS) served?
+- ~~Is any NVIDIA speech model (Parakeet / MagpieTTS) served?~~ — moot, voice
+  cut 30 Sep
 
-If embeddings or speech are not served, they get self-hosted on the AI Cloud
-VM. That decision belongs in week one, not week four.
+If the embedding model is not served, it gets self-hosted on the AI Cloud VM
+(Serverless AI -> Endpoints). That decision belongs in week one, not week four.
+The speech question is moot: voice was cut on 30 Sep.
 
 ## 5. Tool-calling response shape
 

@@ -215,3 +215,22 @@ from a running log reads specific rather than generic, which is visible.
   drive-relative canary passes against the old code too, because a
   nonexistent path 404s however it was resolved. The property-based
   containment test is the one that actually discriminates.
+- **Voice cut, 30 Sep.** The week-1 gate (one agent on Nemotron inside a
+  sandbox) was due 24 Sep and had not been met, because Token Factory and the
+  VM were both still untouched. The build plan's own rule was to drop voice if
+  that slipped past the 28th, so the call took about a minute rather than a
+  day of hedging. Worth carrying into the feedback section: writing the
+  decision rule down *in advance*, with a date attached, is what made it cheap
+  — by the time you are deciding under pressure you have already lost the
+  argument with yourself.
+- The 30 seconds voice occupied went to the governance beat, which now has
+  0:55–1:40 instead of 1:25–2:00. That is the strongest material in the video,
+  and it was the beat most squeezed by a fixed three-minute cap.
+- Removed voice from README, CLAUDE.md, the submission checklist and the
+  prior-work disclosure. It is stated as cut in LEGACY.md rather than quietly
+  omitted: that file is the disclosure a judge can check against the
+  repository, and a silent omission reads worse than a stated cut.
+- Kept the `voice` event kind in EVENT_KINDS. It is additive-only by design so
+  old session files stay readable, and reviving voice later would need no
+  migration. Commented to say so, since an unused enum member otherwise looks
+  like an oversight.

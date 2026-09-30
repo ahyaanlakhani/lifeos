@@ -33,7 +33,10 @@ EVENT_KINDS = frozenset(
         "egress_decision",  # allow/deny came back
         "memory_write",     # workspace file or pgvector row changed
         "search",           # Tavily call — evidence of a runtime call
-        "voice",            # Parakeet transcript segment or resulting intent
+        # Voice was cut from scope on 30 Sep. The kind is kept rather than
+        # removed: EVENT_KINDS is additive-only so old session files stay
+        # readable, and reviving voice later would then need no migration.
+        "voice",
         "error",
     }
 )
