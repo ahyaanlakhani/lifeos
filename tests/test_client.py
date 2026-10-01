@@ -72,12 +72,31 @@ def test_the_shipped_routing_file_parses_and_defines_every_task() -> None:
         assert task in table, task
 
 
-def test_the_shipped_routing_file_still_holds_placeholders() -> None:
-    """A guard, not a wish: this test flips to the assertion below once the
-    real ids are in, and until then it documents why nothing can call out."""
+def test_the_shipped_routing_file_holds_real_model_ids() -> None:
+    """Flipped on 1 Oct 2026, when the real routing keys were read from the
+    Token Factory console. Until then this asserted the opposite and
+    documented why nothing could call out."""
     routing = inference.Routing()
-    with pytest.raises(inference.PlaceholderModelError, match="Token Factory console"):
-        routing.model_for("execute")
+    for task in inference.TASKS:
+        model = routing.model_for(task)  # raises PlaceholderModelError if TODO
+        assert model.startswith("nvidia/"), task
+
+
+def test_every_routed_model_has_a_price() -> None:
+    """Otherwise the cost meter reads "no rate" for a tier that is actually
+    being billed, which is worse than showing nothing."""
+    routing = inference.Routing()
+    for task in inference.TASKS:
+        model = routing.model_for(task)
+        assert routing.cost(model, 1_000_000, 1_000_000) is not None, model
+
+
+def test_the_tiers_are_priced_in_the_order_the_routing_assumes() -> None:
+    """Nano cheapest, Ultra dearest. If that ever inverts, the routing policy
+    is costing money rather than saving it and should be revisited."""
+    routing = inference.Routing()
+    cost = lambda task: routing.cost(routing.model_for(task), 1_000_000, 1_000_000)  # noqa: E731
+    assert cost("summarize") < cost("execute") < cost("plan")
 
 
 def test_routing_resolves_tasks_to_models(routing_file: Path) -> None:
@@ -137,8 +156,15 @@ def test_the_fallback_yaml_parser_matches_pyyaml_on_this_file(routing_file: Path
 def test_the_fallback_parser_handles_the_shipped_file_with_its_comments() -> None:
     text = inference.ROUTING_PATH.read_text(encoding="utf-8")
     parsed = inference._parse_simple_yaml(text)
-    assert parsed["execute"].endswith("nemotron-3-super")
+    assert parsed["execute"] == "nvidia/nemotron-3-super-120b-a12b"
     assert "#" not in parsed["execute"]
+
+
+def test_the_fallback_parser_reads_the_nested_pricing_block() -> None:
+    """The cost meter has to survive PyYAML being missing on the VM."""
+    text = inference.ROUTING_PATH.read_text(encoding="utf-8")
+    parsed = inference._parse_simple_yaml(text)
+    assert parsed["pricing"]["nvidia/Nemotron-3-Ultra-550b-a55b"]["output_per_mtok"] == 3.0
 
 
 # -- completion and telemetry ---------------------------------------------

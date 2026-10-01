@@ -148,6 +148,13 @@ def _parse_simple_yaml(text: str) -> dict[str, Any]:
         key = key.strip()
         value = value.strip()
 
+        # Keys get quoted too — the pricing block is keyed by routing keys,
+        # which contain slashes. Leaving the quotes on produced a dict whose
+        # keys never matched the model id, so the cost meter read "no rate"
+        # on any VM without PyYAML installed.
+        if _is_quoted(key):
+            key = key[1:-1]
+
         while len(stack) > 1 and indent <= stack[-1][0]:
             stack.pop()
         parent = stack[-1][1]

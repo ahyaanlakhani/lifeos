@@ -1,25 +1,44 @@
 # Model routing policy. Hot-reloaded by the agent host; Glass Box writes here
 # via POST /api/routing.
 #
-# Model ids below are PLACEHOLDERS. Replace with the exact ids from the
-# Token Factory console (Step 1 of the runbook) before any real call.
-# The client raises PlaceholderModelError on any id still containing "TODO",
-# which fails loudly rather than as a confusing 404 from the API.
+# Model ids and prices below were read from the Token Factory console on
+# 1 Oct 2026 (tokenfactory.nebius.com -> Model endpoints). They are routing
+# keys, which is what the console calls the id you pass as `model`.
+#
+# Note the four different naming conventions — redundant NVIDIA- prefix on
+# Nano, all-lowercase on Super, mixed case on Ultra, underscore for the .5 on
+# Lightning. These cannot be inferred from the display names, which is exactly
+# why the build plan says never to guess them.
 #
 # Never hardcode a model id in agent code — always route through complete().
 
-plan:      "TODO/nemotron-3-ultra"     # daily planning pass, nightly synthesis
-execute:   "TODO/nemotron-3-super"     # agent execution — the default tier
-summarize: "TODO/nemotron-3-nano"      # activity feed, classification
+plan:      "nvidia/Nemotron-3-Ultra-550b-a55b"       # daily planning, nightly synthesis
+execute:   "nvidia/nemotron-3-super-120b-a12b"       # agent execution — the default tier
+summarize: "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"   # activity feed, classification
 
-# Cheap-dev override: point all three at the nano id while building, so debug
-# loops do not burn Super/Ultra credits.
+# Cheap-dev override: point plan and execute at the Nano id above while
+# building, so debug loops do not burn Super/Ultra credits. Nano and Ultra
+# differ by ~17x on input and ~12x on output.
 
-# Cost meter. Fill in from the Token Factory pricing page, keyed by the exact
-# model id used above. Left empty on purpose: the client reports cost as null
-# rather than 0.00 when a rate is unknown, because a meter reading zero looks
-# like a working meter reporting a free call.
-pricing: {}
-#   "nvidia/nemotron-3-nano":
-#     input_per_mtok: 0.00
-#     output_per_mtok: 0.00
+# Also available, not currently routed:
+#   nvidia/Nemotron-3_5-Lightning   $0.06/$0.24, 314 tok/s, 30B MoE / 3B active
+#     Same price as Nano and roughly 5x the throughput, described as built for
+#     agentic reasoning and tool use. A candidate for `summarize`, and worth
+#     benchmarking against Super for `execute` once tool calling is verified.
+
+# Cost meter. USD per million tokens, keyed by the exact routing key above.
+# Read from the console on 1 Oct 2026; re-check before the submission, since
+# public endpoint pricing can move.
+pricing:
+  "nvidia/Nemotron-3-Ultra-550b-a55b":
+    input_per_mtok: 1.00
+    output_per_mtok: 3.00
+  "nvidia/nemotron-3-super-120b-a12b":
+    input_per_mtok: 0.30
+    output_per_mtok: 0.90
+  "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B":
+    input_per_mtok: 0.06
+    output_per_mtok: 0.24
+  "nvidia/Nemotron-3_5-Lightning":
+    input_per_mtok: 0.06
+    output_per_mtok: 0.24

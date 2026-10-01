@@ -234,3 +234,61 @@ from a running log reads specific rather than generic, which is visible.
   old session files stay readable, and reviving voice later would need no
   migration. Commented to say so, since an unused enum member otherwise looks
   like an oversight.
+
+## 2026-10-01 — Token Factory, read from the console
+
+Browsed the console directly rather than trusting the build plan. Four things
+worth recording, three of which could not have been guessed.
+
+- **The base URL in the build plan is stale.** It says
+  `https://api.studio.nebius.com/v1`. The real one is
+  `https://api.tokenfactory.nebius.com/v1/` — the product was renamed and
+  studio.nebius.com now redirects. Had we guessed, the first call would have
+  failed in a way that looks like a bad key.
+- **The routing keys use four different naming conventions across four models
+  from the same vendor**: `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` (redundant
+  prefix), `nvidia/nemotron-3-super-120b-a12b` (all lower), 
+  `nvidia/Nemotron-3-Ultra-550b-a55b` (mixed), `nvidia/Nemotron-3_5-Lightning`
+  (underscore for the point release). None inferable from the display names.
+  This is the single best vindication of the plan's "do not guess them" rule,
+  and it belongs in the feedback section verbatim.
+- **No NVIDIA embedding model is served.** The only embedding endpoint is
+  Qwen3-Embedding-8B. The plan predicted this ("most likely self-host on
+  Nebius AI Cloud"), and it was right. **Open decision, needs making before
+  week 4** — see below.
+- **Public endpoints warn that availability and processing region may change
+  without notice and break the current base_url.** For a demo URL that has to
+  work for judges in December, that is a live risk. Dedicated endpoints are
+  the production answer.
+
+Real prices are now in `routing.yaml`, so the cost meter works. Nano $0.06 /
+$0.24, Super $0.30 / $0.90, Ultra $1.00 / $3.00 per Mtok.
+
+With real rates, `scripts/forecast.py` puts the entire six weeks of inference
+at **$5.45**. The earlier estimate from measured token volume and invented
+rates said about $5 — the point stands either way: inference is a rounding
+error and GPU hours are the whole bill.
+
+### Open decision: the embedding model
+
+- **Self-host `llama-nemotron-embed-1b-v2`** on AI Cloud. Keeps the memory
+  layer NVIDIA end to end, which is a direct hit on the "how effectively does
+  it use NVIDIA models" criterion. Costs GPU hours and a chunk of week 4.
+- **Use `Qwen3-Embedding-8B`** from Token Factory. $0.01/Mtok, one line of
+  config, no infrastructure. But it is not an NVIDIA model, and the submission
+  currently claims NVIDIA embeddings.
+
+Whichever is chosen, `LEGACY.md` and the prior-work disclosure must match it.
+
+### Also found
+
+- `nvidia/Nemotron-3_5-Lightning`: same price as Nano, ~5x throughput, built
+  for agentic tool use. Not in the build plan. Worth benchmarking for both
+  `summarize` and `execute`.
+- `NousResearch/Hermes-4-405B` is served — the plan's "cheap surface area"
+  suggestion via `NEMOCLAW_AGENT=hermes` is available.
+- A bug the new pricing surfaced: the fallback YAML parser did not unquote
+  *keys*, only values. The pricing block is keyed by routing keys, which are
+  quoted because they contain slashes — so on any VM without PyYAML the cost
+  meter would have silently read "no rate". Fixed; the fallback now matches
+  PyYAML exactly on the shipped file, which is asserted.

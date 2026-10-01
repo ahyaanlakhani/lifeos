@@ -10,10 +10,10 @@ The governance problem is the point. An agent with access to your calendar,
 inbox and contacts, running unattended, is only acceptable if you can see what
 it is doing and stop it mid-action from your phone.
 
-> **Status: week 1 of 6.** Everything below either runs today or is marked as
-> not built. Nothing has yet made a real inference call — the Token Factory
-> model ids are still placeholders, and the client refuses to call out until
-> they are replaced, deliberately.
+> **Status: week 2 of 6.** Everything below either runs today or is marked as
+> not built. Real Nemotron routing keys and prices are in `routing.yaml` as of
+> 1 Oct; the only thing standing between this and a live inference call is an
+> API key.
 
 ## Try it — no credentials, no VM, no GPU
 
@@ -81,12 +81,12 @@ stand alone without it.
 
 | Component | Used for | Status |
 |---|---|---|
-| Nemotron 3 Ultra | Daily planning, nightly memory synthesis and grounding | routed, awaiting model id |
-| Nemotron 3 Super | Agent execution — the default working tier | routed, awaiting model id |
-| Nemotron 3 Nano | Activity-feed summarization, classification | routed, awaiting model id |
-| Nebius Token Factory | All LLM inference, OpenAI-compatible endpoint | client built |
+| Nemotron 3 Ultra | Daily planning, nightly memory synthesis and grounding | routed — `nvidia/Nemotron-3-Ultra-550b-a55b` |
+| Nemotron 3 Super | Agent execution — the default working tier | routed — `nvidia/nemotron-3-super-120b-a12b` |
+| Nemotron 3 Nano | Activity-feed summarization, classification | routed — `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` |
+| Nebius Token Factory | All LLM inference, OpenAI-compatible endpoint | client built, awaiting an API key |
 | NemoClaw + OpenShell | Per-agent sandboxing with egress allowlists | driver built, CLI unverified |
-| NVIDIA embeddings | pgvector memory index | week 4 |
+| NVIDIA embeddings | pgvector memory index | **not served by Token Factory** — self-host or use Qwen3-Embedding-8B |
 | Nebius AI Cloud | GPU VM hosting the host, sandboxes and voice | week 1 |
 | Nebius Serverless Jobs | Nightly memory synthesis and grounding | job written, not yet deployed |
 | Tavily | Research search, memory-claim grounding | built |
@@ -122,7 +122,7 @@ python -m pytest
 npm run typecheck --prefix apps/glassbox
 ```
 
-373 tests, all offline. Nothing in the suite reaches a network or spends a
+394 tests, all offline. Nothing in the suite reaches a network or spends a
 credit — the inference transport, the sandbox driver and the search client are
 all injectable, and recorded fixtures stand in for live responses. That is not
 tidiness: burning Token Factory credits on debug loops is a real way to lose a
