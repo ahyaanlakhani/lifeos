@@ -292,3 +292,11 @@ Whichever is chosen, `LEGACY.md` and the prior-work disclosure must match it.
   quoted because they contain slashes — so on any VM without PyYAML the cost
   meter would have silently read "no rate". Fixed; the fallback now matches
   PyYAML exactly on the shipped file, which is asserted.
+- Committing the base URL broke `test_env_example_holds_no_values`, correctly:
+  the guard forbade *any* value. But the rule it should enforce is about
+  secrecy, not emptiness — a public endpoint is not a credential, and having
+  it wrong costs a debugging session. Rewritten as
+  `test_env_example_holds_no_secrets` with an explicit `PUBLISHABLE_DEFAULTS`
+  map, so a committed value is a decision somebody made rather than drift,
+  plus a per-credential test so a failure names the variable that leaked.
+  Verified by planting a fake key in `.env.example` and watching both fail.

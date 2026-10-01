@@ -139,17 +139,58 @@ def test_no_endpoint_response_mentions_a_credential_name(api: TestClient) -> Non
             assert name not in body
 
 
-def test_env_example_holds_no_values(clean_machine: None) -> None:
-    """Only names. A value committed here is a value in the git history
-    forever, and the repo is public."""
+# Non-secret configuration that is allowed to carry a value in .env.example.
+# Each entry is a deliberate decision, not a convenience: a value committed
+# here is in the public git history forever.
+#
+#   NEBIUS_BASE_URL  the public Token Factory endpoint. Not a credential, and
+#                    having it wrong costs a confusing debugging session —
+#                    the build plan's own copy of it is already stale.
+#   HOST_URL         a private hostname on the Tailscale network.
+#   DEMO             the flag itself.
+PUBLISHABLE_DEFAULTS = {
+    "NEBIUS_BASE_URL": "https://api.tokenfactory.nebius.com/v1/",
+    "HOST_URL": "http://lifeos-vm:8000",
+    "DEMO": {"true", "false"},
+}
+
+
+def test_env_example_holds_no_secrets(clean_machine: None) -> None:
+    """Names only, except for reviewed non-secret defaults.
+
+    The rule is about secrecy, not emptiness: anything that would let someone
+    else spend money or read data must be a bare name. Everything else needs
+    an entry in PUBLISHABLE_DEFAULTS, so adding one is a decision somebody
+    made rather than something that drifted in.
+    """
     for line in (ROOT / ".env.example").read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        name, _, value = line.partition("=")
-        assert value.strip() in ("", "true", "false", "http://lifeos-vm:8000"), (
-            f"{name} has a value in .env.example: {value!r}"
+        name, _, raw = line.partition("=")
+        name, value = name.strip(), raw.strip()
+        if not value:
+            continue
+
+        assert name in PUBLISHABLE_DEFAULTS, (
+            f"{name} has a value in .env.example and is not a reviewed "
+            f"non-secret default: {value!r}"
         )
+        allowed = PUBLISHABLE_DEFAULTS[name]
+        assert value in (allowed if isinstance(allowed, set) else {allowed}), (
+            f"{name} has an unexpected value: {value!r}"
+        )
+
+
+@pytest.mark.parametrize("name", CREDENTIALS)
+def test_no_credential_has_a_value_in_env_example(name: str, clean_machine: None) -> None:
+    """Stated separately and per-credential, so the failure names the one that
+    leaked rather than reporting that some line somewhere has a value."""
+    if name in PUBLISHABLE_DEFAULTS:
+        pytest.skip(f"{name} is a reviewed non-secret default")
+    for line in (ROOT / ".env.example").read_text(encoding="utf-8").splitlines():
+        if line.strip().startswith(f"{name}="):
+            assert line.split("=", 1)[1].strip() == "", f"{name} has a value committed"
 
 
 def test_no_real_env_file_is_tracked() -> None:
