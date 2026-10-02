@@ -331,3 +331,13 @@ Also noted: the demo requirement reads "a URL to a working demo, hosted
 application, **or test build**", which is softer than assumed, and 16,309
 entrants are registered — so a track award plus the Tavily bonus remains the
 realistic ceiling, as the plan said.
+- Verified the full prize table. Overall Awards are $20,000 / $10,000 /
+  $6,000; the Personal AI track award is an NVIDIA Jetson Orin Nano, i.e.
+  hardware, not cash. All the money sits in the three Overall Awards.
+- The useful part: Overall eligibility reads "All Eligible Submissions", so
+  every entry is automatically in that pool. Entering a track does not forfeit
+  it. The stacking rule caps what a project can *win*, not what it is judged
+  for — which means there is no strategy to play, only a submission to make
+  good. Worth knowing, because the build plan's framing ("the realistic
+  ceiling is track winner plus Tavily") reads as though aiming lower were a
+  choice being made.

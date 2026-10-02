@@ -46,10 +46,34 @@ The demo requirement is also softer than assumed: "a URL to a working demo,
 - [ ] What-changed disclosure for the pre-existing work
 - ~~City selection~~ — not eligible, no event attended (see above)
 
-## Prize strategy
+## Prizes, verified 2 Oct 2026
 
-One Overall Award **or** one Track Award, plus one Bonus Award. The realistic
-ceiling is Personal AI track winner plus Best Use of Tavily.
+| | Prize | Qty | Eligibility as written |
+|---|---|---|---|
+| **Overall** | Grand Prize **$20,000** | 1 | All Eligible Submissions |
+| | 2nd Place **$10,000** | 1 | All Eligible Submissions |
+| | 3rd Place **$6,000** | 1 | All Eligible Submissions |
+| **Track** | Personal AI — *NVIDIA Jetson Orin Nano* | 1 | All submissions in the track |
+| **Bonus** | Best Use of Tavily **$3,000** | 1 | Functional runtime Tavily call |
+| | City Winner $500 | 20 | Entrants attending an IRL event — not us |
+| | Most Valuable Feedback $100 + swag | 10 | Complete the feedback section |
+
+**The track award is hardware, not cash.** All the money is in the three
+Overall Awards.
+
+> Each Project is eligible for one (1) Overall Award OR one (1) Track Award
+> and one (1) Bonus Award.
+
+**There is no trade-off to manage.** Overall eligibility is "All Eligible
+Submissions" — every entry is automatically considered. You do not pick a pool
+or forfeit one by entering a track. The rule caps what a project may *win*,
+not what it is judged for. So the only lever is making the submission as good
+as possible; there is nothing to hedge.
+
+Best realistic outcome: **$20,000 + $3,000 = $23,000.** Floor, if the project
+lands well in its track: a Jetson + $3,000.
+
+## Prize strategy
 
 - **Tavily ($3,000)** needs only a functional runtime call. Done — the Research
   agent's search tool and the nightly grounding pass. Far fewer entrants
