@@ -1,9 +1,28 @@
 # Submission
 
-Deadline **Fri 30 Oct 2026, 10:00 PT** (18:00 London). Submit **28 Oct**, two
+Deadline **Fri 30 Oct 2026, 10:00 PDT** (18:00 London). Submit **28 Oct**, two
 days early. Nothing new goes in after 26 Oct.
 
-Re-check the rules on Devpost before submitting — they state they may change.
+**Verified against the live Devpost rules on 2 Oct 2026.** Deadline unchanged.
+16,309 participants registered. Re-check again before submitting.
+
+<https://nebiusglobalaihackathon.devpost.com/rules>
+
+## The requirement, read exactly
+
+> All submissions must run on either Nebius Token Factory **or** Nebius AI
+> Cloud and use at least one NVIDIA open source model.
+
+It is an **OR**. Token Factory alone satisfies eligibility — the GPU VM is not
+required to enter. The build plan assumed both were needed, and that framing
+made NemoClaw look like a blocker to submitting at all. It is not. It is a
+blocker to the *governance argument*, which is a different and smaller risk.
+
+The Personal AI track names "tools such as NVIDIA NemoClaw, OpenShell, Hermes
+Agent, and Nebius Serverless". "Such as" is suggestive, not mandatory.
+
+The demo requirement is also softer than assumed: "a URL to a working demo,
+**hosted application, or test build**".
 
 ## Checklist
 
@@ -18,12 +37,14 @@ Re-check the rules on Devpost before submitting — they state they may change.
 - [x] Public repo with an OSS licence visible at the top of the page — MIT,
       committed in the first commit.
       <https://github.com/ahyaanlakhani/lifeos>
+- [ ] Claim the $25 promo credits (code `NEBIUS-DEVPOST-GLOBAL26`) and join
+      the Builders Program for the second $25
 - [ ] README: setup, how to run, where Nemotron is used, where Token Factory
       accelerated the work, other Nebius services used
 - [ ] Feedback on Token Factory, AI Cloud and the NVIDIA tooling — write this
       from `BUILD-LOG.md`, not from memory on the last day
 - [ ] What-changed disclosure for the pre-existing work
-- [ ] City selection if you attended a Builders & Brews event
+- ~~City selection~~ — not eligible, no event attended (see above)
 
 ## Prize strategy
 
@@ -35,8 +56,29 @@ ceiling is Personal AI track winner plus Best Use of Tavily.
   contest this than the overall prizes.
 - **Nebius Builder Program** — credits for Token Factory, Tavily and Nebius
   Academy. Join it.
-- **Builders & Brews, London** — $500 pool with a much smaller field.
-- **Most Valuable Feedback** — its own category, and a required field anyway.
+- ~~**Builders & Brews, London**~~ — **not available.** The Official Rules
+  restrict City Winner Awards to "Entrants attending one of the following
+  participating IRL city events". London was 15 Sep and has passed. The
+  resources page claims attendance is not needed; the Official Rules say it
+  is, and the rules govern. Remaining events are Boston (2 Oct), SF (9 Oct)
+  and LA (13 Oct) — all US. Treat this prize as gone.
+- **Most Valuable Feedback** — $100 + NVIDIA swag, **10 winners**, and the
+  stated criterion is simply "All Eligible Submissions that complete the
+  feedback submission section". Best effort-to-odds ratio on the board.
+
+### Credits
+
+- $25 Token Factory credits via the promo form, activation code
+  `NEBIUS-DEVPOST-GLOBAL26`
+- $25 more by joining the Nebius Builders Program (also the Tavily credits)
+
+$50 total. The measured forecast for the entire six weeks of inference is
+**$5.45**, so inference is covered roughly nine times over.
+
+**No AI Cloud credits are provided.** The only mention is that Builders &
+Brews attendees "can also unlock additional Nebius AI Cloud, Token Factory,
+Tavily credits" — and those events are past or overseas. So GPU hours come out
+of pocket, which is the entire bill. Stop the VM when not using it.
 
 ## The four criteria, equally weighted
 

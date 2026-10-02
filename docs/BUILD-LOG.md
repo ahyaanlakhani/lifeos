@@ -300,3 +300,34 @@ Whichever is chosen, `LEGACY.md` and the prior-work disclosure must match it.
   map, so a committed value is a decision somebody made rather than drift,
   plus a per-credential test so a failure names the variable that leaked.
   Verified by planting a fake key in `.env.example` and watching both fail.
+
+## 2026-10-02 — the rules, read rather than assumed
+
+Read the live Devpost rules instead of working from the build plan's 19 Sep
+summary. Deadline confirmed unchanged (30 Oct, 10:00 PDT). Three corrections,
+one of which changes the risk profile of the whole project.
+
+- **"Token Factory *or* AI Cloud."** The eligibility requirement is an OR, not
+  an AND. Token Factory alone qualifies. The build plan's framing implied both
+  were needed, which made NemoClaw look like a blocker to submitting at all.
+  It is not. NemoClaw is what makes the governance *argument* real — losing it
+  costs the thesis, not eligibility. That is a much smaller and more
+  manageable risk than it looked yesterday.
+- **The City Winner Award is gone.** The Official Rules limit it to "Entrants
+  attending one of the following participating IRL city events". London was
+  15 Sep. The resources page says attendance is not required; the Official
+  Rules say it is. Where two official sources disagree, the rules govern.
+  Removed from the prize strategy rather than left as a hopeful line.
+- **Most Valuable Feedback is the best-value prize left**: $100 + swag, ten
+  winners, and the criterion is literally completing the feedback section —
+  which is a required submission field anyway. The build log is already the
+  raw material for it.
+
+Credits: $50 Token Factory ($25 promo + $25 Builders Program) against a
+measured $5.45 forecast, so inference is covered nine times over. **No AI
+Cloud credits** — GPU hours are out of pocket, and they are the entire bill.
+
+Also noted: the demo requirement reads "a URL to a working demo, hosted
+application, **or test build**", which is softer than assumed, and 16,309
+entrants are registered — so a track award plus the Tavily bonus remains the
+realistic ceiling, as the plan said.
