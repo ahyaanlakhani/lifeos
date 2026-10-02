@@ -341,3 +341,61 @@ realistic ceiling, as the plan said.
   good. Worth knowing, because the build plan's framing ("the realistic
   ceiling is track winner plus Tavily") reads as though aiming lower were a
   choice being made.
+
+## 2026-10-02 — NemoClaw prerequisites: no GPU
+
+Read the official docs
+(<https://docs.nvidia.com/nemoclaw/latest/user-guide/openclaw/get-started/prerequisites>)
+rather than inferring from the build plan. The plan says the VM "needs Linux,
+containers, a GPU". The GPU half is wrong for our architecture.
+
+**The hardware table lists CPU, RAM and disk. There is no GPU row.**
+
+| Resource | Minimum | Recommended |
+|---|---|---|
+| CPU | 4 vCPU | 4+ vCPU |
+| RAM | 8 GB | 16 GB |
+| Disk | 20 GB free | 40 GB free |
+
+CUDA appears twice in the whole page: once for N1x FASTOS, a *deferred*
+platform we are not using, and otherwise only around **local** model serving
+— managed vLLM, Ollama, llama.cpp. We do none of that. Inference is routed to
+Token Factory, which the docs treat as a first-class path ("Choose an
+Inference Provider ... routed inference configuration").
+
+So the VM is a **plain CPU box**, roughly an order of magnitude cheaper than
+the GPU instance the plan implied. Given there are no AI Cloud credits, this
+is the single largest cost decision in the project and it was based on a
+requirement that does not exist.
+
+Software: Node.js 22.19+, npm 10+, Python 3, and Docker Engine/Desktop/Colima
+(or qualified rootless Podman). All already satisfied locally.
+
+### Why not run it on the laptop
+
+Windows WSL2 is a supported platform ("Tested with limitations", Docker
+Desktop backend). Tempting, because it would cost nothing. But this machine
+has **7.8 GB of RAM — under the 8 GB minimum** — and the docs are specific
+about what happens:
+
+> On machines with less than 8 GB of RAM, this combined usage can trigger the
+> OOM killer. If you cannot add memory, configure at least 8 GB of swap.
+
+4 logical cores, exactly the minimum. And the agent host would be competing
+with Next.js and a browser. The build plan already reached the same
+conclusion from the other direction: "8 GB — workable, but keep Docker off
+the laptop entirely and develop against the remote VM."
+
+Decision: small CPU-only cloud VM. Not the laptop, not a GPU instance.
+
+### Already on the machine
+
+`wsl --list` shows an `OpenClawGateway` distribution (Ubuntu 24.04.5 LTS)
+alongside `docker-desktop`. Neither `nemoclaw` nor `openshell` is installed
+inside it, so this is a leftover scaffold from an earlier attempt rather than
+a working install. Worth clearing or at least knowing about before onboarding,
+since the docs warn against managing OpenShell separately from
+`nemoclaw onboard`.
+
+Ubuntu 24.04 is the docs' primary validated path, which is the right target
+for the VM image too.

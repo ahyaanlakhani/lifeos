@@ -1,4 +1,9 @@
-# Week-1 unknowns — answer by experiment, by 24 Sep
+# Week-1 unknowns — answer by experiment
+
+> **Hardware question settled, 2 Oct:** NemoClaw needs **no GPU**. Its
+> prerequisites list 4 vCPU / 8 GB RAM / 20 GB disk and no GPU row; CUDA is
+> required only for local model serving, which we do not do because inference
+> is routed to Token Factory. Provision a CPU-only Ubuntu 24.04 box.
 
 Everything downstream depends on these. Write the answers in here. The
 fallbacks are already decided so that a bad answer costs no design time.
