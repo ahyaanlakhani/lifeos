@@ -399,3 +399,27 @@ since the docs warn against managing OpenShell separately from
 
 Ubuntu 24.04 is the docs' primary validated path, which is the right target
 for the VM image too.
+- Built `packages/memory` while waiting on credentials: pgvector schema,
+  embedding client and vector recall. Week-4 work pulled forward, so week 4
+  becomes "point it at Supabase" rather than "write the memory layer".
+- The schema adds `embedding_nv` **beside** any existing column rather than
+  altering it, and records `embedding_model` per row. A swap is a re-index,
+  and a re-index that fails with no fallback column means recomputing
+  everything. `memory_rows_needing_embedding` makes the re-index resumable.
+  Grounding lives in its own table so re-running the nightly pass never
+  rewrites the rows being checked.
+- `embeddings.provenance()` derives the README claim from configuration
+  rather than prose, so the submission cannot drift into claiming an NVIDIA
+  embedding model it is not using.
+- Two bugs the new tests caught, both of the kind that look fine until they
+  do not:
+  1. The demo embedding unpacked SHA-256 bytes as IEEE-754 floats. Some
+     inputs decode to **NaN**, and because every comparison with NaN is false,
+     a single poisoned vector silently dropped the correct top hit out of a
+     sorted result — recall returned a 0.0 match while an exact 1.0 match sat
+     in the same list. Now mapped from integers into [-1, 1), with a test that
+     every component is finite.
+  2. `recall` defaulted to `min_score=0.0`, which discarded every negative
+     cosine — about half the rows — so a kind-filtered recall came back empty
+     while relevant rows existed. Default is now no floor; cutting off a
+     ranked result is a caller's decision.

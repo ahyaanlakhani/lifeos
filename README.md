@@ -66,6 +66,7 @@ to render.
 | **Agent loop** | The replacement for the Agent SDK's orchestration. Refuses tools marked as needing approval, treats tool output as data not instructions, and caps turns and tool calls. |
 | **Sandbox driver** | A `SandboxDriver` interface with a real NemoClaw implementation and a fake one. Demo mode runs the fake. |
 | **Replay** | Scrub back through any past session, read off disk so it survives a restart of the host. |
+| **Memory store** | pgvector schema, embedding client and vector recall. Demo mode uses deterministic stand-in vectors and says so in the event stream. |
 | **Tavily** | The Research agent's search tool, and the memory-grounding pass. |
 | **Nano summarization** | Batched rewrite of raw log lines into the activity feed. Built and tested; dormant until a Token Factory key and real model ids exist. |
 
@@ -86,7 +87,7 @@ stand alone without it.
 | Nemotron 3 Nano | Activity-feed summarization, classification | routed — `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` |
 | Nebius Token Factory | All LLM inference, OpenAI-compatible endpoint | client built, awaiting an API key |
 | NemoClaw + OpenShell | Per-agent sandboxing with egress allowlists | driver built, CLI unverified |
-| NVIDIA embeddings | pgvector memory index | **not served by Token Factory** — self-host or use Qwen3-Embedding-8B |
+| Embeddings | pgvector memory index | **no NVIDIA embedding model on Token Factory.** Using Qwen3-Embedding-8B (4096 dims); self-hosting the NVIDIA one is a week-4 option |
 | Nebius AI Cloud | GPU VM hosting the host, sandboxes and voice | week 1 |
 | Nebius Serverless Jobs | Nightly memory synthesis and grounding | job written, not yet deployed |
 | Tavily | Research search, memory-claim grounding | built |
@@ -122,7 +123,7 @@ python -m pytest
 npm run typecheck --prefix apps/glassbox
 ```
 
-400 tests, all offline. Nothing in the suite reaches a network or spends a
+433 tests, all offline. Nothing in the suite reaches a network or spends a
 credit — the inference transport, the sandbox driver and the search client are
 all injectable, and recorded fixtures stand in for live responses. That is not
 tidiness: burning Token Factory credits on debug loops is a real way to lose a
