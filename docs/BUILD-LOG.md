@@ -423,3 +423,38 @@ for the VM image too.
      cosine — about half the rows — so a kind-filtered recall came back empty
      while relevant rows existed. Default is now no floor; cutting off a
      ranked result is a caller's decision.
+
+## 2026-10-04 — nightly synthesis
+
+`jobs/` only did grounding, while the README claimed "Nebius Serverless Jobs:
+nightly memory synthesis". Built the synthesis pass so the claim is true.
+
+It reads the day's event log, asks Ultra what is worth remembering, and writes
+the result to the memory store. This is the only place in LifeOS that writes
+to memory without a human in the loop, so it is built to be distrusted:
+
+- Every proposal must cite the event ids it came from; no citation, no row. A
+  memory you cannot trace is one you cannot later correct.
+- A proposal whose words do not overlap its cited events is dropped. Cheap,
+  and it catches the obvious failure of the model summarising its own prior
+  knowledge instead of the log.
+- Near-duplicates of existing rows are skipped, so running nightly does not
+  slowly fill memory with restatements.
+- `MAX_NEW_ROWS` bounds the damage from one bad night.
+- Without a client it writes nothing and says so, rather than guessing.
+
+`main()` runs synthesis then grounding, so a claim learned tonight is verified
+in the same run rather than sitting unverified until tomorrow.
+
+### Found by running it
+
+The first run fed **3,606 events** — about 72k tokens — into the prompt,
+almost all of it `DEMO_LOOP` repeating the same 18 lines. Added `condense()`,
+which collapses identical agent+summary pairs to their first occurrence with a
+repeat count, then keeps the most recent 1,200. The same session now yields
+**18 events**, a 99.5% reduction, and the cost of a night's synthesis drops
+from $0.072 to $0.0004 at the real Ultra rate.
+
+The reduction is incidental; the real gain is that the model now reads a day
+rather than 3,600 lines of noise. An agent doing the same thing forty times is
+one fact, not forty.
